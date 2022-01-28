@@ -1,0 +1,48 @@
+---
+title: "Aqui você coloca o título"
+author: "Aqui você coloca o autor(s)"
+abstract: "Aqui você escreve o resumo"
+header-includes:
+   - \usepackage[brazil]{babel}
+   - \usepackage{bm}
+geometry: left=1.7cm, right=1.7cm, top=3cm, bottom=3cm
+output:
+  bookdown::pdf_document2:
+editor_options:
+  chunk_output_type: console
+indent: true
+bibliography: bib.bib 
+csl: statistics.csl
+nocite: '@*'
+link-citations: true
+---
+
+
+
+```{r setup,include=F}
+
+options(digits=3)  #Arrendodamento
+options(scipen=999)
+ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no ggplot2
+knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=4.85)
+scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set2") #Fixa a scale do fill dos gráficos do ggplot2
+```
+
+
+```{r}
+df <- read.csv('Pokemon.csv')
+b <- c(unlist(df$Name))
+
+library(gtrendsR)
+library(reshape2)
+  
+google.trends = gtrends(b[1:5], gprop = "web", time = "all")[[1]]
+
+```
+
+
+
+
+
+
+
