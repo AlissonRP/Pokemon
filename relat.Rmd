@@ -30,6 +30,11 @@ scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set2") #F
 
 
 # Introdução
+
+Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?  
+Pokémons são criaturas fictícias que pertencem ao universo da série de mesmo nome - Pokémon. Originalmente, a série foi criada como um jogo de videogame e, com a sua popularização, se espalhou para diversos outros formatos, como séries de TV, filmes e livros.
+
+A palavra pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um pokémon é um "monstro de bolso", na tradução literal.
 ```{r}
 #Aqui vão códigos em R
 library(tidyverse)
@@ -41,6 +46,7 @@ df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon
   mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
          Generation = factor(Generation))
 ```
+
 
 # Análise Descritiva
 
@@ -96,9 +102,14 @@ rank_results(df_tuner,rank_metric = "roc_auc") %>% view()
 
 ## Regressão Logística
 
+Regressão logistíca é um dos principais modelo estatístico atuais, é usado frequentemente em análise inferencial, porém podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($\hat{p}$) do modelo ser classificado como de certa classe, em outras palavras se $\hat{p} \geq T$, onde T é um certo limite pré estabelecido, a predição será para o pokémon ser lendário, aqui utilizamos $T = 0.5$.
+
+
 ## Random Forest 
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, pois evidentemente queremoss aprender padrões nos dados.
 
 ## Xgboost
+Algoritmos de boosting atualmente são o estado da arte para dados estruturados, portanto é sempre bom ajustar algum deles
 
 
 
