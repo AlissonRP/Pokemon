@@ -5,12 +5,14 @@ abstract: "abstract"
 header-includes:
    - \usepackage[brazil]{babel}
    - \usepackage{bm}
+   - \usepackage{float}
 geometry: left=1.7cm, right=1.7cm, top=3cm, bottom=3cm
 output:
   bookdown::pdf_document2:
 editor_options:
   chunk_output_type: console
 indent: true
+
 
 ---
 
@@ -28,13 +30,16 @@ scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set2") #F
 
 
 # Introdução
-```{r }
+```{r}
 #Aqui vão códigos em R
 library(tidyverse)
+library(tidymodels)
+library(themis)
 
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
-  select(-`Type 2`, `#`, -Name,) |> 
-  mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)))
+  select(-`Type 2`, -`#`, -Name, -Total) |> 
+  mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
+         Generation = factor(Generation))
 ```
 
 # Análise Descritiva
@@ -49,16 +54,59 @@ df |>
 
 
 # Análise Preditiva
+Vamos aqui utilizar como variável de desfecho a classificação do pokémom, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de avaliação vamos utilizar a área sobre a curva roc e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
+
+```{r model}
+set.seed(42)
+df_split = initial_split(df |> select(-`Type 1`), prop = 0.8 , strata = Legendary)
+df_train = training(df_split)
+df_test = testing(df_split)
+df_vf = vfold_cv(df_train, 10, strata = Legendary)
+```
+
+```{r}
+df_rec1 = df_train |> 
+  recipe(Legendary ~.)
+
+df_rf = rand_forest(mode = 'classification', trees = 500) |> 
+  set_engine('ranger')
+
+df_rl = logistic_reg() |> 
+  set_engine('glm')
+
+
+```
+
+```{r}
+df_work=workflow_set(list(si=df_rec1),
+                     list(logistic=df_rl,rf=df_rf),cross=T)
+```
+```{r}
+set.seed(4)
+doParallel::registerDoParallel(cores=2)
+df_tuner=df_work %>% 
+  workflow_map("tune_grid",
+               resamples=df_vf,
+               grid=15,
+               metrics=metric_set(roc_auc),verbose=T)
+rank_results(df_tuner,rank_metric = "roc_auc") %>% view()
+```
+
+
+
+## Regressão Logística
+
+## Random Forest 
+
+## Xgboost
+
+
+
+
 
 # Análise Inferencial
-```{r crftable}
 
-iris |>  
-mypdf1::pdf1_freq.tbl(Species,"seila") |> 
-  mypdf1::pdf1_tbl("You can combine this function too!")
-    
-```
-Você faz referência cruzada de tabelas assim: Tabela \@ref(tab:crftable)
+
 
 ```{r crfgraph, fig.cap = "Nome da figura"}
 plot(rnorm(500))
