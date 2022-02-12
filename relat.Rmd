@@ -1,0 +1,189 @@
+---
+title: "title"
+author: "Alisson Rosa e "
+abstract: "abstract"
+header-includes:
+   - \usepackage[brazil]{babel}
+   - \usepackage{bm}
+   - \usepackage{float}
+geometry: left=1.7cm, right=1.7cm, top=2.5cm, bottom=2.5cm
+output:
+  bookdown::pdf_document2:
+editor_options:
+  chunk_output_type: console
+indent: true
+
+
+---
+
+
+
+```{r setup,include=F}
+
+options(digits=3)  #Arrendodamento
+options(scipen=999)
+
+ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no ggplot2
+knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=4.85)
+#scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set1") #Fixa a scale do fill dos gráficos do ggplot2
+
+```
+
+
+# Introdução
+
+Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?  
+Pokémons são criaturas fictícias que pertencem ao universo da série de mesmo nome - Pokémon. Originalmente, a série foi criada como um jogo de videogame e, com a sua popularização, se espalhou para diversos outros formatos, como séries de TV, filmes e livros.
+
+A palavra pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um pokémon é um "monstro de bolso", na tradução literal.
+
+
+```{r}
+#Aqui vão códigos em R
+#citar pokemonfandom
+library(tidyverse)
+library(tidymodels)
+library(themis)
+library(patchwork)
+#https://www.datanovia.com/en/blog/easy-way-to-expand-color-palettes-in-r/
+
+df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
+  select(-`#`, -Name, -Total) |> 
+  mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
+         Generation = factor(Generation))
+
+#cols = length(levels(factor(df$`Type 1`)))
+#mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
+#scale_fill_discrete = \(...) mycolors
+
+```
+
+
+# Análise Descritiva
+Cada Pokémon tem seus próprios atributos, como HP (vida), Attack (Ataque), Defesa (Defense), Speed (velocidade) e outros mais especificos como:  
+
+* **Generation** (geração): Uma Geração em Pokémon é um grupo de jogos separados de acordo com os Pokémon que estão incluídos nela. Cada geração possui novos Pokémon, ataques e habilidades que não existem nas gerações anteriores. Aqui portanto cada Pokémon tera sua respectiva geração, sendo tratata como uma variável de fator. 
+
+* **Type** (Tipo): São classificações a que estão submetidos todos os Pokémon e técnicas (movimentos). A partir dos tipos, além de ser possível conhecer um pouco mais a natureza de cada Pokémon, é possível também  elaborar estratégias de batalha. Isso porque cada tipo tem vantagens e desvantagens sobre outros tipos. Cada Pokémon pode pertencer a até dois tipos, sendo o primeiro deles o primário (Type 1) e o outro, o secundário (Type 2). Por outro lado, cada movimento tem só um tipo. Um Pokémon pode ter até quatro movimentos, mas elas não precisam ser do mesmo tipo que a criatura.
+
+* **Special Attacks** (Sp. < >) : Ataques Especiais  são movimentos que dão mais dano do que os anteriores, porém possuem um limitador de uso em forma de barra que deve ser carregada. Assim essa variável é dividida em **Sp. Atk** que é a força do ataque especial e  **Sp. Def** que é a defesa do ataque especial.
+
+* **Legendary** (Lendário): Pokémon Lendário (Inglês: Legendary Pokémon) é a denominação dada a uma espécie de Pokémon altamente poderosa, raríssima ou, em alguns casos, até mesmo de um único indivíduo, da qual muito se fala em lendas e mitos no mundo Pokémon, e cuja aparição é extremamente rara. Na seção de modelagem utilizaremos como variável a ser predita o Pokémon ser lendário ou não.
+
+### Constraste de Atributos 
+Nessa subseção vamos vislumbrar os atributos dos Pokémon constrastando  entre os lendários e não lendários. Primeiro vejamos a média dos atributos dentre as classificações
+
+
+```{r}
+df_dec = df |> 
+  mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))
+
+mean_leg = df_dec |> 
+  group_by(Legendary) |> 
+  summarise(across(where(is.numeric), mean),n = n()) 
+
+mean_leg |> 
+  mypdf1::pdf1_tbl('Média dos atributos entre as classificações')
+
+
+
+```
+Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.
+
+
+### Tipos e classificação
+Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico ref fornece um vislumbre
+
+
+```{r}
+df_dec |> 
+  filter(Legendary == "Não") |> 
+  group_by(`Type 1`) |> 
+  count() |> 
+  ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip()+
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(`Type 1`) |> 
+  count() |> 
+   ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip()+ plot_layout(guides = "collect") & theme(legend.position = "none")
+
+```
+
+
+
+
+# Análise Preditiva
+Vamos aqui utilizar como variável de desfecho a classificação do pokémom, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de avaliação vamos utilizar a área sobre a curva roc e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
+
+```{r model}
+set.seed(42)
+df_split = initial_split(df |> select(-`Type 1`,-`Type 2`), prop = 0.8 , strata = Legendary)
+df_train = training(df_split)
+df_test = testing(df_split)
+df_vf = vfold_cv(df_train, 10, strata = Legendary)
+```
+
+```{r}
+df_rec1 = df_train |> 
+  recipe(Legendary ~.)
+
+df_rf = rand_forest(mode = 'classification', trees = 500) |> 
+  set_engine('ranger')
+
+df_rl = logistic_reg() |> 
+  set_engine('glm')
+
+
+```
+
+```{r}
+df_work=workflow_set(list(si=df_rec1),
+                     list(logistic=df_rl,rf=df_rf),cross=T)
+```
+```{r}
+set.seed(4)
+doParallel::registerDoParallel(cores=2)
+df_tuner=df_work %>% 
+  workflow_map("tune_grid",
+               resamples=df_vf,
+               grid=15,
+               metrics=metric_set(roc_auc),verbose=T)
+rank_results(df_tuner,rank_metric = "roc_auc") %>% view()
+```
+
+
+
+## Regressão Logística
+
+Regressão logistíca é um dos principais modelo estatístico atuais, é usado frequentemente em análise inferencial, porém podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($\hat{p}$) do modelo ser classificado como de certa classe, em outras palavras se $\hat{p} \geq T$, onde T é um certo limite pré estabelecido, a predição será para o pokémon ser lendário, aqui utilizamos $T = 0.5$.
+
+
+## Random Forest 
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, pois evidentemente queremoss aprender padrões nos dados.
+
+## Xgboost
+Algoritmos de boosting atualmente são o estado da arte para dados estruturados, portanto é sempre bom ajustar algum deles
+
+
+
+
+
+# Análise Inferencial
+
+
+
+```{r crfgraph, fig.cap = "Nome da figura"}
+plot(rnorm(500))
+```
+
+Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
+
+
+# Bibliography
+
+
+
