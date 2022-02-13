@@ -93,7 +93,7 @@ Assim, como esperado os pokémom lendários possuem atributos superiores (na mé
 
 
 ### Tipos e classificação
-Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico ref fornece um vislumbre
+Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico \@ref(fig:ref) fornece um vislumbre
 
 
 ```{r ref, E, fig.cap = "Frequência de Pokémons Lendários e Não Lendários por Tipo"}
