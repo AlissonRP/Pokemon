@@ -32,7 +32,7 @@ knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'cent
 
 # Introdução
 
-Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?  
+Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?    
 Pokémons são criaturas fictícias que pertencem ao universo da série de mesmo nome - Pokémon, são semelhantes a animais do mundo real, podendo viver em bandos ou individualmente, mas também podem ser inspirados em objetos inanimados como velas, sorvetes, chaveiro e outros instrumentos.  Originalmente, a série foi criada como um jogo de videogame e, com a sua popularização, se espalhou para diversos outros formatos, como séries de TV, filmes e livros.
 
 A palavra pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um pokémon é um "monstro de bolso", na tradução literal, além de ser uma contração esse seria o nome original da série, devido ao lugar onde os Pokémons são armazenados:  as pokébolas, uma espécie de bola pequena para pode-los transportar com mais facilidade, sendo essas basicamente suas casas. Assim as criaturas poderiam descansar após suas batalhas, sendo essa sua principal função explorada no universo Pokémon, em que os monstrinhos lutam de acordo com habilidades da sua tipagem (Fogo, Água, Planta, Pedra, Elétrico, Voador, Lutador, Psíquico, Fantasma, entre outros.).  
@@ -50,12 +50,28 @@ library(patchwork)
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
   select(-`#`, -Name, -Total) |> 
   mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
-         Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) )
+         Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) ))
          #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
 
 #cols = length(levels(factor(df$`Type 1`)))
 #mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
 #scale_fill_discrete = \(...) mycolors
+
+```
+```{r}
+graph<-function(df,l , v){
+  df %>% 
+    as_tibble() %>% 
+      ggplot(aes(as.numeric(row.names(df  %>% as_tibble())),value, color = {{v}}))+
+      geom_point()+
+      geom_hline(yintercept=l, linetype="dashed", color = "red")+
+      geom_hline(yintercept=-l, linetype="dashed", color = "red")+
+      labs(x="Índice")
+    
+}
+
+
+
 
 ```
 
@@ -122,7 +138,7 @@ Vamos aqui utilizar como variável de desfecho a classificação do pokémom, se
 
 ```{r model}
 set.seed(42)
-df_split = initial_split(df |> select(-`Type 1`,-`Type 2`), prop = 0.8 , strata = Legendary)
+df_split = initial_split(df |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.8 , strata = Legendary)
 df_train = training(df_split)
 df_test = testing(df_split)
 df_vf = vfold_cv(df_train, 10, strata = Legendary)
@@ -163,8 +179,16 @@ rank_results(df_tuner,rank_metric = "roc_auc") %>% view()
 Regressão logistíca é um dos principais modelo estatístico atuais, é usado frequentemente em análise inferencial, porém podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($\hat{p}$) do modelo ser classificado como de certa classe, em outras palavras se $\hat{p} \geq T$, onde T é um certo limite pré estabelecido, a predição será para o pokémon ser lendário, aqui utilizamos $T = 0.5$.
 
 
+```{r}
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df_train)
+```
+
+
+
 ## Random Forest 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, pois evidentemente queremoss aprender padrões nos dados.
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, pois evidentemente queremos aprender padrões nos dados.
 
 ## Xgboost
 Algoritmos de boosting atualmente são o estado da arte para dados estruturados, portanto é sempre bom ajustar algum deles
@@ -175,16 +199,62 @@ Algoritmos de boosting atualmente são o estado da arte para dados estruturados,
 
 # Análise Inferencial
 
+## Análise de Dignóstico
+Vamos nessa seção avaliar a existência de pontos influentes
 
+```{r}
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df) |> 
+  with(fit) |> with(fit) |> with(fit)
+```
+
+
+`
+
+
+### Distância de cook
+Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados, 
+
+```{r}
+diagreg::cook(fit1)
+```
+
+
+### Dffits
+No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
+
+```{r}
+diagreg::dffts(fit1)
+```
+
+O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
+
+
+
+```{r}
+diagreg::Resid(fit1)
+```
+
+
+E por último o envelope simulado, que fornce um vislumbre se a distribuição é adequada para o ajuste
 
 ```{r crfgraph, fig.cap = "Nome da figura"}
-plot(rnorm(500))
+fit1 |> 
+  diagreg::envelopes()
 ```
 
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
 
 
 # Bibliography
+```{r}
+cor = function(cor = 'black'){
+iris |> 
+  ggplot(aes(Sepal.Length, Sepal.Width, color = {{cor}}))+
+  geom_point()
+}
+```
 
 
 
