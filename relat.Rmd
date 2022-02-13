@@ -1,6 +1,6 @@
 ---
 title: "title"
-author: "Alisson Rosa e "
+author: "Alisson Rosa e Vítor Pereira "
 abstract: "abstract"
 header-includes:
    - \usepackage[brazil]{babel}
