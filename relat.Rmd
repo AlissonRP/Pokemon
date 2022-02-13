@@ -95,7 +95,7 @@ Assim, como esperado os pokémom lendários possuem atributos superiores (na mé
 Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico ref fornece um vislumbre
 
 
-```{r}
+```{r ref, E, fig.cap = "Frequência de Pokémons Lendários e Não Lendários por Tipo"}
 df_dec |> 
   filter(Legendary == "Não") |> 
   group_by(`Type 1`) |> 
