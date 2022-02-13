@@ -50,7 +50,8 @@ library(patchwork)
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
   select(-`#`, -Name, -Total) |> 
   mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
-         Generation = factor(Generation))
+         Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) )
+         #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
 
 #cols = length(levels(factor(df$`Type 1`)))
 #mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
