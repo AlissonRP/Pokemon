@@ -61,7 +61,7 @@ df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon
 
 
 # Análise Descritiva
-Cada Pokémon tem seus próprios atributos, como HP (vida), Attack (Ataque), Defesa (Defense), Speed (velocidade) e outros mais especificos como:  
+Cada Pokémon tem seus próprios atributos, como HP (Vida), Attack (Ataque), Defense (Defesa), Speed (Velocidade) e outros mais especificos como:  
 
 * **Generation** (geração): Uma Geração em Pokémon é um grupo de jogos separados de acordo com os Pokémon que estão incluídos nela. Cada geração possui novos Pokémon, ataques e habilidades que não existem nas gerações anteriores. Aqui portanto cada Pokémon tera sua respectiva geração, sendo tratata como uma variável de fator. 
 
