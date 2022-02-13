@@ -1,6 +1,6 @@
 ---
 title: "title"
-author: "Alisson Rosa e "
+author: "Alisson Rosa e Vítor Pereira "
 abstract: "abstract"
 header-includes:
    - \usepackage[brazil]{babel}
@@ -33,9 +33,9 @@ knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'cent
 # Introdução
 
 Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?  
-Pokémons são criaturas fictícias que pertencem ao universo da série de mesmo nome - Pokémon. Originalmente, a série foi criada como um jogo de videogame e, com a sua popularização, se espalhou para diversos outros formatos, como séries de TV, filmes e livros.
+Pokémons são criaturas fictícias que pertencem ao universo da série de mesmo nome - Pokémon, são semelhantes a animais do mundo real, podendo viver em bandos ou individualmente, mas também podem ser inspirados em objetos inanimados como velas, sorvetes, chaveiro e outros instrumentos.  Originalmente, a série foi criada como um jogo de videogame e, com a sua popularização, se espalhou para diversos outros formatos, como séries de TV, filmes e livros.
 
-A palavra pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um pokémon é um "monstro de bolso", na tradução literal.
+A palavra pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um pokémon é um "monstro de bolso", na tradução literal, além de ser uma contração esse seria o nome original da série, devido ao lugar onde os Pokémons são armazenados:  as pokébolas, uma espécie de bola pequena para pode-los transportar com mais facilidade, sendo essas basicamente suas casas. Assim as criaturas poderiam descansar após suas batalhas, sendo essa sua principal função explorada no universo Pokémon, em que os monstrinhos lutam de acordo com habilidades da sua tipagem (Fogo, Água, Planta, Pedra, Elétrico, Voador, Lutador, Psíquico, Fantasma, entre outros.).  
 
 
 ```{r}
@@ -50,7 +50,8 @@ library(patchwork)
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
   select(-`#`, -Name, -Total) |> 
   mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
-         Generation = factor(Generation))
+         Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) )
+         #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
 
 #cols = length(levels(factor(df$`Type 1`)))
 #mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
@@ -60,7 +61,7 @@ df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon
 
 
 # Análise Descritiva
-Cada Pokémon tem seus próprios atributos, como HP (vida), Attack (Ataque), Defesa (Defense), Speed (velocidade) e outros mais especificos como:  
+Cada Pokémon tem seus próprios atributos, como HP (Vida), Attack (Ataque), Defense (Defesa), Speed (Velocidade) e outros mais especificos como:  
 
 * **Generation** (geração): Uma Geração em Pokémon é um grupo de jogos separados de acordo com os Pokémon que estão incluídos nela. Cada geração possui novos Pokémon, ataques e habilidades que não existem nas gerações anteriores. Aqui portanto cada Pokémon tera sua respectiva geração, sendo tratata como uma variável de fator. 
 
@@ -92,10 +93,10 @@ Assim, como esperado os pokémom lendários possuem atributos superiores (na mé
 
 
 ### Tipos e classificação
-Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico ref fornece um vislumbre
+Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico \@ref(fig:ref) fornece um vislumbre
 
 
-```{r}
+```{r ref, E, fig.cap = "Frequência de Pokémons Lendários e Não Lendários por Tipo"}
 df_dec |> 
   filter(Legendary == "Não") |> 
   group_by(`Type 1`) |> 
