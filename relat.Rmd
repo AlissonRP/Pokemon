@@ -198,7 +198,7 @@ $$
 Definindo $\sum_{i=1}^{n}\beta_iX_i$ como $\eta$  fica fácil ver que $p$ pode ser escrito como:
 
 $$
-p = \dfrac{e^{\eta}}{1-e^{\eta}}
+p = \dfrac{e^{\eta}}{1+e^{\eta}}
 $$
 Apesar do modelo de regressão logística ser mais utilizado em análise inferencial,  podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($p$) do modelo ser classificado como de certa classe, em outras palavras se $p \geq T$, onde T é um certo limite pré estabelecido, como não temos em mãos o modelo populacional trabalhamos com a predição $\hat{p}$ para a classificação do Pokémon ser lendário, aqui utilizamos $T = 0.5$.
 
