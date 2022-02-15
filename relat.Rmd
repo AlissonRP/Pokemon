@@ -187,7 +187,7 @@ df_tuner = df_work %>%
 
 ## Regressão Logística
 
-Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network]. como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
+Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network.] como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
 
 O MLG usando como função de ligação logit pode ser escrito da seguinte maneira:
 $$
