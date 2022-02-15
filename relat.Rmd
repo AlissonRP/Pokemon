@@ -227,7 +227,7 @@ extract_fit_parsnip() %>%
 ```
 
 ## Xgboost
-É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
+É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
 
 ```{r}
 fit3 = df_tuner %>% 
