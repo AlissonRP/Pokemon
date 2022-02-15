@@ -29,9 +29,7 @@ knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'cent
 
 ```
 
-```{r}
 
-```
 
 
 
@@ -171,13 +169,13 @@ df_xgb =
 ```
 
 ```{r}
-df_work=workflow_set(list(si=df_rec1),
-                     list(logistic=df_rl,rf=df_rf, xg = df_xgb),cross=T)
+df_work = workflow_set(list(si=df_rec1),
+                     list(logistic=df_rl,rf=df_rf, xg = df_xgb), cross=T)
 ```
 ```{r}
 set.seed(4)
 doParallel::registerDoParallel(cores=2)
-df_tuner=df_work %>% 
+df_tuner = df_work %>% 
   workflow_map("tune_grid",
                resamples=df_vf,
                grid=15,
@@ -229,14 +227,75 @@ extract_fit_parsnip() %>%
 ```
 
 ## Xgboost
-É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores. O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados
+É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
+
+```{r}
+fit3 = df_tuner %>% 
+  extract_workflow(id='si_xg') %>% 
+  fit(df_train)
+```
 
 
+Uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possue os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
+
+```{r}
+fit1 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+```
+comentários
+
+
+
+```{r}
+fit2 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Random Forest')
+```
+comentários
+
+
+```{r}
+fit3 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de XgBoost')
+```
+Da matriz de confusão podemos derivar as seguintes métricas:  
+
+* Valor predito positivo: Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
+* Valor predito negativo: Por definição é a proporção de predições negativas que foram corretamentes previstas  
+* Sensibilidade: É a proporção de previsões corretas dos casos positivos  
+* Especificidade: É a proporção de previsões corretas dos casos negativos
+
+
+
+O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
 ```{r}
 autoplot(df_tuner) 
 ```
 
 
+E para os dados de teste temos: 
+
+```{r}
+final_log = df_tuner %>% 
+  extract_workflow(id='si_logistic') |>
+  last_fit(split = df_split, metrics = metric_set(roc_auc, sens, spec, ppv, npv)) |> 
+  collect_metrics()
+ 
+
+
+
+ test = final_log |> with(.estimate) 
+ names(test) = final_log |> with(.metric)
+ 
+```
 
 
 
