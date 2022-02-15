@@ -1,7 +1,7 @@
 ---
 title: "title"
 author: "Alisson Rosa e Vítor Pereira "
-abstract: "abstract"
+abstract: "Pokémon são criaturas que vivem em todos os lugares, livres na natureza ou com os humanos, cada Pokémom tem seu tipo, pontos fortes e fracos. Com isso o objetivo desse trabalho é analisar suas estatísticas, desenvolvendo gráficos e tabelas e também construindo um modelo que dados as características do Pokémon ele irá nos fornecer uma predição se o Pokémon é lendário ou não."
 header-includes:
    - \usepackage[brazil]{babel}
    - \usepackage{bm}
@@ -24,10 +24,18 @@ options(digits=3)  #Arrendodamento
 options(scipen=999)
 
 ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no ggplot2
-knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=4.85)
+knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=3.85)
 #scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set1") #Fixa a scale do fill dos gráficos do ggplot2
 
 ```
+
+```{r}
+
+```
+
+
+
+
 
 
 # Introdução
@@ -39,7 +47,7 @@ A palavra pokémon é a contração de duas palavras em inglês: pocket, que sig
 
 
 ```{r}
-#Aqui vão códigos em R
+
 #citar pokemonfandom
 library(tidyverse)
 library(tidymodels)
@@ -105,7 +113,7 @@ mean_leg |>
 
 
 ```
-Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.
+Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.  
 
 
 ### Tipos e classificação
@@ -149,17 +157,22 @@ df_rec1 = df_train |>
   recipe(Legendary ~.)
 
 df_rf = rand_forest(mode = 'classification', trees = 500) |> 
-  set_engine('ranger')
+  set_engine('ranger', importance = "impurity")
+
 
 df_rl = logistic_reg() |> 
   set_engine('glm')
+
+df_xgb = 
+   boost_tree(mode = 'classification') |> 
+   set_engine("xgboost")
 
 
 ```
 
 ```{r}
 df_work=workflow_set(list(si=df_rec1),
-                     list(logistic=df_rl,rf=df_rf),cross=T)
+                     list(logistic=df_rl,rf=df_rf, xg = df_xgb),cross=T)
 ```
 ```{r}
 set.seed(4)
@@ -168,15 +181,26 @@ df_tuner=df_work %>%
   workflow_map("tune_grid",
                resamples=df_vf,
                grid=15,
-               metrics=metric_set(roc_auc),verbose=T)
-rank_results(df_tuner,rank_metric = "roc_auc") %>% view()
+               metrics=metric_set(roc_auc, specificity, sensitivity), verbose=T)
+
 ```
 
 
 
 ## Regressão Logística
 
-Regressão logistíca é um dos principais modelo estatístico atuais, é usado frequentemente em análise inferencial, porém podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($\hat{p}$) do modelo ser classificado como de certa classe, em outras palavras se $\hat{p} \geq T$, onde T é um certo limite pré estabelecido, a predição será para o pokémon ser lendário, aqui utilizamos $T = 0.5$.
+Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network]. como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
+
+O MLG usando como função de ligação logit pode ser escrito da seguinte maneira:
+$$
+\text{log}\bigg(\dfrac{p}{1-p}\bigg)=\sum_{i=1}^{n}\beta_iX_i \quad \text{onde} \quad X_0=1
+$$
+Definindo $\sum_{i=1}^{n}\beta_iX_i$ como $\eta$  fica fácil ver que $p$ pode ser escrito como:
+
+$$
+p = \dfrac{e^{\eta}}{1-e^{\eta}}
+$$
+Apesar do modelo de regressão logística ser mais utilizado em análise inferencial,  podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($p$) do modelo ser classificado como de certa classe, em outras palavras se $p \geq T$, onde T é um certo limite pré estabelecido, como não temos em mãos o modelo populacional trabalhamos com a predição $\hat{p}$ para a classificação do Pokémon ser lendário, aqui utilizamos $T = 0.5$.
 
 
 ```{r}
@@ -187,11 +211,31 @@ fit1 = df_work %>%
 
 
 
-## Random Forest 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, pois evidentemente queremos aprender padrões nos dados.
+## Random Forest
+
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja.
+
+
+
+
+```{r}
+fit2=df_tuner %>% 
+  extract_workflow(id='si_rf') %>% 
+  fit(df_train) 
+
+fit2 %>% 
+extract_fit_parsnip() %>% 
+  vip::vip(num_features = 10)
+```
 
 ## Xgboost
-Algoritmos de boosting atualmente são o estado da arte para dados estruturados, portanto é sempre bom ajustar algum deles
+É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores. O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados
+
+
+```{r}
+autoplot(df_tuner) 
+```
+
 
 
 
@@ -200,7 +244,7 @@ Algoritmos de boosting atualmente são o estado da arte para dados estruturados,
 # Análise Inferencial
 
 ## Análise de Dignóstico
-Vamos nessa seção avaliar a existência de pontos influentes
+Vamos nessa seção avaliar a existência de pontos influentes no modelo de Regressão logística
 
 ```{r}
 fit1 = df_work %>% 
@@ -238,22 +282,26 @@ diagreg::Resid(fit1)
 
 
 E por último o envelope simulado, que fornce um vislumbre se a distribuição é adequada para o ajuste
+```{r, results = F, fig.show='hide'}
+g1 <- hnp::hnp(fit1, resid.type="deviance", halfnormal = F)
+G1 <- with(g1, data.frame(x, lower, upper, median, residuals))
+```
 
-```{r crfgraph, fig.cap = "Nome da figura"}
-fit1 |> 
-  diagreg::envelopes()
+```{r}
+G1 %>%
+ggplot(aes(x)) +
+  geom_point(aes(y = residuals)) +
+  geom_line(aes(y = lower)) +
+  geom_line(aes(y = upper)) +
+  geom_line(aes(y = median), linetype = "dashed")
 ```
 
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
 
 
-# Bibliography
+# Bibliografia
 ```{r}
-cor = function(cor = 'black'){
-iris |> 
-  ggplot(aes(Sepal.Length, Sepal.Width, color = {{cor}}))+
-  geom_point()
-}
+
 ```
 
 
