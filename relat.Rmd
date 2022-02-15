@@ -236,7 +236,7 @@ fit3 = df_tuner %>%
 ```
 
 
-Uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possue os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
+Uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possui os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
 
 ```{r}
 fit1 |> 
