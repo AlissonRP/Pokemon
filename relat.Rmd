@@ -31,7 +31,6 @@ ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no g
 knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=3.85)
 #scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set1") #Fixa a scale do fill dos gráficos do ggplot2
 
-
 d=function(df,v1,v2,px){
   df %>% 
     ggplot(aes({{v1}},{{v2}})) +
@@ -47,7 +46,6 @@ graph<-function(data,l, df){
       geom_hline(yintercept=-l, linetype="dashed", color = "black")+
       labs(x="Índice") + labs(color='Lendário') 
 }
-
 fitdf<-function(fit) {
   summary(fit) |>
     (\(x) x$coefficients)() |>
@@ -59,7 +57,6 @@ fitdf<-function(fit) {
       "Estatística t" = "t.value"
     )
 }
-
 dffts<-function(fitn,lab1,df){
   n = length(fitn$fitted.values)
   dffits(fitn) %>% 
@@ -192,7 +189,6 @@ df_dec |>
   count() |> 
    ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-
   coord_flip() +
   labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
@@ -228,7 +224,8 @@ df_dec |>
   group_by(Generation) |> 
   count() |> 
   ggplot(aes(Generation, n, fill = Generation)) +
-  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
+  geom_bar(stat = 'identity')+ labs(y="Quantidade de  pokémons") + theme(legend.position = "none")+
+  geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
 ```
 
 Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
@@ -240,58 +237,17 @@ df_dec |>
   count() |> 
   ggplot(aes(Generation, n, fill = Generation)) +
   geom_bar(stat = 'identity')+
-  labs(y="Quantidade de  pokémons") + theme(legend.position = "none")
-Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são água e normal, enquanto para os pokémons lendários se destacam psíquico e dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
-
-```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
-df_dec |> 
-  filter(Legendary == "Não") |> 
-  group_by(`Type 2`) |> 
-  count() |> 
-  ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
-  geom_bar(stat = 'identity')+
-  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
-df_dec |> 
-  filter(Legendary == "Sim") |> 
-  group_by(`Type 2`) |> 
-  count() |> 
-   ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
-  geom_bar(stat = 'identity')+
-  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none")  
-
+  labs(y="Quantidade de  pokémons") + theme(legend.position = "none") +
+  geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
 ```
-Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo voador, que se destaca para os pokémons lendários. Para os pokémons lendários também se salientas os tipos dragão, lutador e psíquico, enquanto que para os pokémons não lendários temos os tipos venenoso, terrestre e psíquico no top 5 de mais recorrentes.
 
 
 Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do [\textcolor{blue}{"Trio de Aves Lendárias"}](https://pt.wikipedia.org/wiki/Articuno,_Zapdos_e_Moltres) e [\textcolor{blue}{"Trio de Cães Lendários"}](https://poke-storn.blogspot.com/2015/02/os-caes-lendarios-legendary-beasts.html), enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
-### Lançamento por gerações
-Nessa subseção iremos analisar a quantidade de pokémons lançados em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons novos por geração na Figura \@ref(fig:g1).
-```{r g1, fig.cap = "Frequência lançados por geração"}
-df_dec |> 
-  group_by(Generation) |> 
-  count() |> 
-  ggplot(aes(Generation, n, fill = Generation)) +
-  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
-```
-Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
-
-```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
-df_dec |> 
-  filter(Legendary == "Sim") |> 
-  group_by(Generation) |> 
-  count() |> 
-  ggplot(aes(Generation, n, fill = Generation)) +
-  geom_bar(stat = 'identity')+
-  labs(y="Novos pokémons") + theme(legend.position = "none")
-```
-
-Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do "Trio de Aves Lendárias" e "Trio de Cães Lendários", enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
 # Análise Preditiva
 
 Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
-
 
 ```{r model}
 set.seed(42)
@@ -363,7 +319,7 @@ fit1 = df_work %>%
 
 ## Random Forest
 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando (bootstrap) o conjunto de treinamento  de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pela Figura \@ref(fig:vip)
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando (bootstrap) o conjunto de treinamento  de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pela Figura \@ref(fig:vip).
 
 
 
