@@ -309,7 +309,7 @@ final_xg = metric('si_xg')
  
  
  
- 
+ #faz a tabela
 vetur(final_log) |> 
   bind_rows(vetur(final_rf)) |> 
   bind_rows(vetur(final_xg)) |> 
