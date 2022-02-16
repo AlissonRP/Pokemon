@@ -60,16 +60,7 @@ df$Legendary = factor(df$Legendary, levels = c(1,0))
 ```
 
 ```{r}
-graph<-function(df,l , v){
-  df %>% 
-    as_tibble() %>% 
-      ggplot(aes(as.numeric(row.names(df  %>% as_tibble())),value, color = {{v}}))+
-      geom_point()+
-      geom_hline(yintercept=l, linetype="dashed", color = "red")+
-      geom_hline(yintercept=-l, linetype="dashed", color = "red")+
-      labs(x="Índice")
-    
-}
+
 
 d=function(df,v1,v2,px){
   df %>% 
@@ -136,49 +127,6 @@ alavanca1 <- function(fit,df){
   labs(title="Alavancagem",y="Medida de Alavancagem")
 }
 
-dffts<-function(fitn,fitg,lab1,lab2){
-    n = length(fitn$fitted.values)
-  dffits(fitn) %>% 
- graph(2*sqrt(fitn$rank / n))+
-  labs(title={{lab1}},y="DFfits")+
-    ggrepel::geom_text_repel(aes(label=1:n),size=2.8,point.padding = 0.3) +
-  dffits(fitg) %>% 
- graph(2*sqrt(fitn$rank / n))+
-  labs(title={{lab2}},y="DFfits")
-}
-
-resid<-function(residuon,residuog,lab1,lab2){
- residuon %>% 
-  graph(3)+
-  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
-  labs(title={{lab1}},y="Resíduo")+
-  residuog %>% 
-  graph(3)+
-  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
-  labs(title={{lab2}},y="Resíduo") 
-}
-
-cook<-function(fitn,fitg,lab1,lab2){
-  n = length(fitn$fitted.values)
-  cooks.distance(fitn) %>% 
-  graph(4/(n-fitn$rank ))+ ggrepel::geom_text_repel(aes(label=1:n),size=2.8,point.padding = 0.3) +
-  labs(title={{lab1}},y="Distância de Cook")+
-  cooks.distance(fitg) %>% 
-  graph(4/(n-fitg$rank ))+
-  labs(title={{lab2}},y="Distância de Cook")
-}
-
-alavanca <- function(fit,fit2,lab1,lab2){
-  h_bar=fit$rank/length(fit$fitted.values)
-  h_bar2=fit2$rank/length(fit2$fitted.values)
-  hatvalues(fit) %>%
-  graph(3*h_bar)+
-  labs(title={{lab1}},y="Medida de Alavancagem") +
-  hatvalues(fit2) %>%
-  graph(3*h_bar2)+
-  labs(title={{lab2}},y="Medida de Alavancagem")
-    
-}
 
 geom_hnp <- function(old_hnp){
   G1 <- with(old_hnp, data.frame(x, lower, upper, median, residuals))
