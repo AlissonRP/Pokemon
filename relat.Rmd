@@ -31,6 +31,59 @@ ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no g
 knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=3.85)
 #scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set1") #Fixa a scale do fill dos gráficos do ggplot2
 
+
+d=function(df,v1,v2,px){
+  df %>% 
+    ggplot(aes({{v1}},{{v2}})) +
+    geom_point(size=2.1,color="red")+
+    ggrepel::geom_text_repel(aes(label=n),size=2.8,point.padding = 0.3)
+}
+graph<-function(data,l, df){
+  data %>% 
+    as_tibble() %>% 
+      ggplot(aes(as.numeric(row.names(data  %>% as_tibble())),value))+
+      geom_point(aes(colour = as.factor(df$Legendary)))+
+      geom_hline(yintercept=l, linetype="dashed", color = "black")+
+      geom_hline(yintercept=-l, linetype="dashed", color = "black")+
+      labs(x="Índice") + labs(color='Lendário') 
+}
+
+fitdf<-function(fit) {
+  summary(fit) |>
+    (\(x) x$coefficients)() |>
+    data.frame() |>
+    round(3) |>
+    select(-`Pr...t..`,
+      "Estimativa" = "Estimate",
+      "Desvio padrão" = "Std..Error",
+      "Estatística t" = "t.value"
+    )
+}
+
+dffts<-function(fitn,lab1,df){
+  n = length(fitn$fitted.values)
+  dffits(fitn) %>% 
+ graph(2*sqrt(fitn$rank / n),df)+
+  labs(title={{lab1}},y="DFfits")
+}
+Resid<-function(residuon,lab1 = 'padrão', df){
+ residuon %>% 
+  graph(3,df)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title = lab1,  y = "Resíduo")
+}
+cook<-function(fitn,lab1 = 'aaah', df){
+    n = length(fitn$fitted.values)
+  cooks.distance(fitn) %>% 
+  graph(4/(n-fitn$rank ), df)+
+  labs(title = lab1,y = "Distância de Cook")
+}
+alavanca <- function(fit,df){
+  h_bar=fit$rank/length(fit$fitted.values)
+  hatvalues(fit) %>%
+  graph(3*h_bar,df)+
+  labs(title="Alavancagem",y="Medida de Alavancagem")
+}
 ```
 
 
@@ -105,7 +158,8 @@ Nessa subseção vamos vislumbrar os atributos dos Pokémon constrastando  entre
 ```{r}
 df_dec = df |> 
   mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))  |>
-  mutate(`Type 2` = fct_explicit_na(`Type 2`, "Sem Tipo 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
+  mutate(`Type 2` = fct_explicit_na(`Type 2`, "No Type 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
+
 
 mean_leg = df_dec |> 
   group_by(Legendary) |> 
@@ -121,7 +175,7 @@ Assim, como esperado os pokémom lendários possuem atributos superiores (na mé
 
 
 ### Tipos e classificação
-Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico \@ref(fig:ref) fornece um vislumbre
+Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. A Figura \@ref(fig:ref) fornece um vislumbre
 
 
 ```{r ref, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo"}
@@ -138,9 +192,55 @@ df_dec |>
   count() |> 
    ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
+
+  coord_flip() +
+  labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
 ```
+Com a Figura \@ref(fig:ref) nota-se  nos Pokémons não lendários que  os tipos que se destacam numericamente são Water (água) e Normal, enquanto para os pokémons lendários se destacam  Psychic (psíquico) e Dragon (dragão). Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
+
+```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
+df_dec |> 
+  filter(Legendary == "Não") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+  ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+   ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip() + 
+  labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none")  
+
+```
+Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo Flying (voador), que se destaca para os Pokémons lendários. Para os okémons lendários também se salientas os tipos dragão,  Fighting (lutador) e psíquico, enquanto que para os pokémons não lendários temos os tipos  Poison (venenoso), Ground (terrestre) e psíquico no top 5 de mais recorrentes.
+
+
+
+### Lançamento por gerações
+Nessa subseção iremos analisar a quantidade de Pokémons  em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons por geração na Figura \@ref(fig:g1).
+```{r g1, fig.cap = "Frequência lançados por geração"}
+df_dec |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+
+Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
+
+```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+
+  labs(y="Quantidade de  pokémons") + theme(legend.position = "none")
 Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são água e normal, enquanto para os pokémons lendários se destacam psíquico e dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
 
 ```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
@@ -163,6 +263,7 @@ df_dec |>
 Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo voador, que se destaca para os pokémons lendários. Para os pokémons lendários também se salientas os tipos dragão, lutador e psíquico, enquanto que para os pokémons não lendários temos os tipos venenoso, terrestre e psíquico no top 5 de mais recorrentes.
 
 
+Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do [\textcolor{blue}{"Trio de Aves Lendárias"}](https://pt.wikipedia.org/wiki/Articuno,_Zapdos_e_Moltres) e [\textcolor{blue}{"Trio de Cães Lendários"}](https://poke-storn.blogspot.com/2015/02/os-caes-lendarios-legendary-beasts.html), enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
 ### Lançamento por gerações
 Nessa subseção iremos analisar a quantidade de pokémons lançados em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons novos por geração na Figura \@ref(fig:g1).
@@ -188,7 +289,9 @@ df_dec |>
 Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do "Trio de Aves Lendárias" e "Trio de Cães Lendários", enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
 # Análise Preditiva
-Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
+
+Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
+
 
 ```{r model}
 set.seed(42)
@@ -227,7 +330,7 @@ df_tuner = df_work %>%
   workflow_map("tune_grid",
                resamples=df_vf,
                grid=15,
-               metrics=metric_set(roc_auc, specificity, sensitivity), verbose=T)
+               metrics=metric_set(roc_auc, sensitivity, ppv), verbose=T)
 
 ```
 
@@ -260,7 +363,7 @@ fit1 = df_work %>%
 
 ## Random Forest
 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando (bootstrap) o conjunto de treinamento  de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pelo gráfico \@ref(fig:vip)
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando (bootstrap) o conjunto de treinamento  de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pela Figura \@ref(fig:vip)
 
 
 
@@ -322,11 +425,15 @@ Da matriz de confusão podemos derivar as seguintes métricas:
 * Valor predito positivo (`ppv`): Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
 * Valor predito negativo (`npv`): Por definição é a proporção de predições negativas que foram corretamentes previstas  
 * Sensibilidade (`sens`): É a proporção de previsões corretas dos casos positivos  
-* Especificidade (`spec`): É a proporção de previsões corretas dos casos negativos
+* Especificidade (`spec`): É a proporção de previsões corretas dos casos negativos  
+
+
+Temos como interesse principal o `ppv` e `sens`, pois estamos preocupados em predizer se o Pokémon **é lendário**, portanto as medidas que focam em acertos de não lendários não são de tamanha importância.
 
 
 
-O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
+A Figura ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
+
 ```{r, fig.cap = 'Métricas dos modelos na validação cruzada'}
 autoplot(df_tuner) +
   labs(x = 'Rank do modelo', y= 'Métrica')
@@ -395,7 +502,7 @@ fit1 = df_work %>%
 Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados, 
 
 ```{r}
-diagreg::cook(fit1)
+#cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:800), size=2.8, point.padding = 0.3)
 ```
 
 
@@ -403,7 +510,7 @@ diagreg::cook(fit1)
 No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
 
 ```{r}
-diagreg::dffts(fit1)
+#dffts(fit1, "Dffits do Modelo 1", df)+ ggrepel::geom_text_repel(aes(label=1:800), size=2.8, point.padding = 0.3)
 ```
 
 O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
@@ -411,7 +518,8 @@ O gráfico de resíduos também é importante para verificarmos visualmente a m�
 
 
 ```{r}
-diagreg::Resid(fit1)
+#resid(fit1)|>
+#Resid("Resíduos do Modelo 1", df)
 ```
 
 
