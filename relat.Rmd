@@ -1,5 +1,5 @@
 ---
-title: "title"
+title: "Explorando a mística de Pokémon: Caracterização de Pokémons Lendários "
 author: "Alisson Rosa e Vítor Pereira "
 abstract: "Pokémon são criaturas que vivem em todos os lugares, livres na natureza ou com os humanos, cada Pokémom tem seu tipo, pontos fortes e fracos. Com isso o objetivo desse trabalho é analisar suas estatísticas, desenvolvendo gráficos e tabelas e também construindo um modelo que dados as características do Pokémon ele irá nos fornecer uma predição se o Pokémon é lendário ou não."
 header-includes:
@@ -12,6 +12,10 @@ output:
 editor_options:
   chunk_output_type: console
 indent: true
+bibliography: bib.bib
+csl: statistics.csl
+nocite: '@*'
+link-citations: true
 
 
 ---
@@ -55,9 +59,10 @@ library(patchwork)
 
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
   select(-`#`, -Name, -Total) |> 
-  mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
+  mutate(Legendary = factor(ifelse(Legendary == T, 1, 0)),
          Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) ))
          #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
+df$Legendary = factor(df$Legendary, levels = c(1,0))
 
 #cols = length(levels(factor(df$`Type 1`)))
 #mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
@@ -99,7 +104,8 @@ Nessa subseção vamos vislumbrar os atributos dos Pokémon constrastando  entre
 
 ```{r}
 df_dec = df |> 
-  mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))
+  mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))  |>
+  mutate(`Type 2` = fct_explicit_na(`Type 2`, "Sem Tipo 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
 
 mean_leg = df_dec |> 
   group_by(Legendary) |> 
@@ -118,33 +124,75 @@ Assim, como esperado os pokémom lendários possuem atributos superiores (na mé
 Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico \@ref(fig:ref) fornece um vislumbre
 
 
-```{r ref, E, fig.cap = "Frequência de Pokémons Lendários e Não Lendários por Tipo"}
+```{r ref, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo"}
 df_dec |> 
   filter(Legendary == "Não") |> 
   group_by(`Type 1`) |> 
   count() |> 
   ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip()+
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
 df_dec |> 
   filter(Legendary == "Sim") |> 
   group_by(`Type 1`) |> 
   count() |> 
    ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip()+ plot_layout(guides = "collect") & theme(legend.position = "none")
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
 ```
+Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são água e normal, enquanto para os pokémons lendários se destacam psíquico e dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
+
+```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
+df_dec |> 
+  filter(Legendary == "Não") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+  ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+   ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none")  
+
+```
+Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo voador, que se destaca para os pokémons lendários. Para os pokémons lendários também se salientas os tipos dragão, lutador e psíquico, enquanto que para os pokémons não lendários temos os tipos venenoso, terrestre e psíquico no top 5 de mais recorrentes.
 
 
 
+### Lançamento por gerações
+Nessa subseção iremos analisar a quantidade de pokémons lançados em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons novos por geração na Figura \@ref(fig:g1).
+```{r g1, fig.cap = "Frequência lançados por geração"}
+df_dec |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
+
+```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+
+  labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+
+Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do "Trio de Aves Lendárias" e "Trio de Cães Lendários", enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
 # Análise Preditiva
-Vamos aqui utilizar como variável de desfecho a classificação do pokémom, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de avaliação vamos utilizar a área sobre a curva roc e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
+Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
 
 ```{r model}
 set.seed(42)
-df_split = initial_split(df |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.8 , strata = Legendary)
+df_split = initial_split(df |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.75 , strata = Legendary)
 df_train = training(df_split)
 df_test = testing(df_split)
 df_vf = vfold_cv(df_train, 10, strata = Legendary)
@@ -152,7 +200,7 @@ df_vf = vfold_cv(df_train, 10, strata = Legendary)
 
 ```{r}
 df_rec1 = df_train |> 
-  recipe(Legendary ~.)
+  recipe(Legendary ~.) 
 
 df_rf = rand_forest(mode = 'classification', trees = 500) |> 
   set_engine('ranger', importance = "impurity")
@@ -173,7 +221,7 @@ df_work = workflow_set(list(si=df_rec1),
                      list(logistic=df_rl,rf=df_rf, xg = df_xgb), cross=T)
 ```
 ```{r}
-set.seed(4)
+set.seed(42)
 doParallel::registerDoParallel(cores=2)
 df_tuner = df_work %>% 
   workflow_map("tune_grid",
@@ -187,7 +235,8 @@ df_tuner = df_work %>%
 
 ## Regressão Logística
 
-Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network.] como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
+
+Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network.] como um modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
 
 O MLG usando como função de ligação logit pode ser escrito da seguinte maneira:
 $$
@@ -198,7 +247,7 @@ Definindo $\sum_{i=1}^{n}\beta_iX_i$ como $\eta$  fica fácil ver que $p$ pode s
 $$
 p = \dfrac{e^{\eta}}{1+e^{\eta}}
 $$
-Apesar do modelo de regressão logística ser mais utilizado em análise inferencial,  podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($p$) do modelo ser classificado como de certa classe, em outras palavras se $p \geq T$, onde T é um certo limite pré estabelecido, como não temos em mãos o modelo populacional trabalhamos com a predição $\hat{p}$ para a classificação do Pokémon ser lendário, aqui utilizamos $T = 0.5$.
+Apesar do modelo de regressão logística ser mais utilizado em análise inferencial, podemos também fazer predições de classes binárias se colocarmos um limiar para a saída ($p$) do modelo ser classificado como de certa classe, em outras palavras se $p \geq T$, onde T é um certo limite pré estabelecido, como não temos em mãos o modelo populacional trabalhamos com a predição $\hat{p}$ para a classificação do Pokémon ser lendário, aqui utilizamos $T = 0.5$.
 
 
 ```{r}
@@ -211,25 +260,27 @@ fit1 = df_work %>%
 
 ## Random Forest
 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja.
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando (bootstrap) o conjunto de treinamento  de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pelo gráfico \@ref(fig:vip)
 
 
 
 
-```{r}
+```{r vip, fig.cap='Importância das variáveis na Random Forest nos dados de treino'}
 fit2=df_tuner %>% 
   extract_workflow(id='si_rf') %>% 
   fit(df_train) 
 
 fit2 %>% 
 extract_fit_parsnip() %>% 
-  vip::vip(num_features = 10)
+  vip::vip(num_features = 10, mapping = aes_string(fill = "Variable"))+
+  labs(y="Importância")
 ```
 
 ## Xgboost
-É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
+É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados igual em Random Forest, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
 
-```{r}
+
+```{r, include=FALSE}
 fit3 = df_tuner %>% 
   extract_workflow(id='si_xg') %>% 
   fit(df_train)
@@ -268,35 +319,59 @@ fit3 |>
 ```
 Da matriz de confusão podemos derivar as seguintes métricas:  
 
-* Valor predito positivo: Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
-* Valor predito negativo: Por definição é a proporção de predições negativas que foram corretamentes previstas  
-* Sensibilidade: É a proporção de previsões corretas dos casos positivos  
-* Especificidade: É a proporção de previsões corretas dos casos negativos
+* Valor predito positivo (`ppv`): Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
+* Valor predito negativo (`npv`): Por definição é a proporção de predições negativas que foram corretamentes previstas  
+* Sensibilidade (`sens`): É a proporção de previsões corretas dos casos positivos  
+* Especificidade (`spec`): É a proporção de previsões corretas dos casos negativos
 
 
 
 O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
-```{r}
-autoplot(df_tuner) 
+```{r, fig.cap = 'Métricas dos modelos na validação cruzada'}
+autoplot(df_tuner) +
+  labs(x = 'Rank do modelo', y= 'Métrica')
 ```
 
 
 E para os dados de teste temos: 
 
-```{r}
-final_log = df_tuner %>% 
-  extract_workflow(id='si_logistic') |>
+```{r yeah}
+#Cria as métricas nos dados de teste
+metric = function(id){
+  df_tuner %>% 
+  extract_workflow(id=id) |>
   last_fit(split = df_split, metrics = metric_set(roc_auc, sens, spec, ppv, npv)) |> 
   collect_metrics()
+}
+#Cria o dataframe das métricas
+vetur = function(final){
+   final_logis = final|> with(.estimate) 
+ names(final_logis) = final |> with(.metric)
+ final_logis |> 
+  as.list() |> 
+  data.frame()
+  
+}
+
+final_log = metric('si_logistic')
+final_rf = metric('si_rf')
+final_xg = metric('si_xg')
  
+ 
+ 
+ #faz a tabela
+oh_yeah = vetur(final_log) |> 
+  bind_rows(vetur(final_rf)) |> 
+  bind_rows(vetur(final_xg)) |> 
+  bind_cols(tibble(Modelo = c('Regressão Logistica','Random Forest','xgboost'))) |> 
+  select(Modelo, everything()) 
 
-
-
- test = final_log |> with(.estimate) 
- names(test) = final_log |> with(.metric)
+oh_yeah |> 
+  mypdf1::pdf1_tbl('Métricas nos dados de teste')
+ 
  
 ```
-
+Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilidade é `r oh_yeah |> filter(sens == max(sens)) |> select(Modelo)`
 
 
 
@@ -358,10 +433,8 @@ ggplot(aes(x)) +
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
 
 
-# Bibliografia
-```{r}
+# Referências {-}
 
-```
 
 
 
