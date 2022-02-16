@@ -55,9 +55,10 @@ library(patchwork)
 
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
   select(-`#`, -Name, -Total) |> 
-  mutate(Legendary = factor(ifelse(Legendary == F, 0, 1)),
+  mutate(Legendary = factor(ifelse(Legendary == T, 1, 0)),
          Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) ))
          #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
+df$Legendary = factor(df$Legendary, levels = c(1,0))
 
 #cols = length(levels(factor(df$`Type 1`)))
 #mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
@@ -144,7 +145,7 @@ Vamos aqui utilizar como variável de desfecho a classificação do pokémom, se
 
 ```{r model}
 set.seed(42)
-df_split = initial_split(df |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.8 , strata = Legendary)
+df_split = initial_split(df |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.75 , strata = Legendary)
 df_train = training(df_split)
 df_test = testing(df_split)
 df_vf = vfold_cv(df_train, 10, strata = Legendary)
@@ -152,7 +153,7 @@ df_vf = vfold_cv(df_train, 10, strata = Legendary)
 
 ```{r}
 df_rec1 = df_train |> 
-  recipe(Legendary ~.)
+  recipe(Legendary ~.) 
 
 df_rf = rand_forest(mode = 'classification', trees = 500) |> 
   set_engine('ranger', importance = "impurity")
@@ -173,7 +174,7 @@ df_work = workflow_set(list(si=df_rec1),
                      list(logistic=df_rl,rf=df_rf, xg = df_xgb), cross=T)
 ```
 ```{r}
-set.seed(4)
+set.seed(42)
 doParallel::registerDoParallel(cores=2)
 df_tuner = df_work %>% 
   workflow_map("tune_grid",
@@ -268,32 +269,54 @@ fit3 |>
 ```
 Da matriz de confusão podemos derivar as seguintes métricas:  
 
-* Valor predito positivo: Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
-* Valor predito negativo: Por definição é a proporção de predições negativas que foram corretamentes previstas  
-* Sensibilidade: É a proporção de previsões corretas dos casos positivos  
-* Especificidade: É a proporção de previsões corretas dos casos negativos
+* Valor predito positivo (`ppv`): Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
+* Valor predito negativo (`npv`): Por definição é a proporção de predições negativas que foram corretamentes previstas  
+* Sensibilidade (`sens`): É a proporção de previsões corretas dos casos positivos  
+* Especificidade (`spec`): É a proporção de previsões corretas dos casos negativos
 
 
 
 O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
-```{r}
-autoplot(df_tuner) 
+```{r, fig.cap = 'Métricas dos modelos na validação cruzada'}
+autoplot(df_tuner) +
+  labs(x = 'Rank do modelo', y= 'Métrica')
 ```
 
 
 E para os dados de teste temos: 
 
 ```{r}
-final_log = df_tuner %>% 
-  extract_workflow(id='si_logistic') |>
+#Cria as métricas nos dados de teste
+metric = function(id){
+  df_tuner %>% 
+  extract_workflow(id=id) |>
   last_fit(split = df_split, metrics = metric_set(roc_auc, sens, spec, ppv, npv)) |> 
   collect_metrics()
+}
+#Cria o dataframe das métricas
+vetur = function(final){
+   final_logis = final|> with(.estimate) 
+ names(final_logis) = final |> with(.metric)
+ final_logis |> 
+  as.list() |> 
+  data.frame()
+  
+}
+
+final_log = metric('si_logistic')
+final_rf = metric('si_rf')
+final_xg = metric('si_xg')
  
-
-
-
- test = final_log |> with(.estimate) 
- names(test) = final_log |> with(.metric)
+ 
+ 
+ 
+vetur(final_log) |> 
+  bind_rows(vetur(final_rf)) |> 
+  bind_rows(vetur(final_xg)) |> 
+  bind_cols(tibble(Modelo = c('Reg_log','Rand_Forest','xgboost'))) |> 
+  select(Modelo, everything()) |> 
+  mypdf1::pdf1_tbl('god')
+ 
  
 ```
 
