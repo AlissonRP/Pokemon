@@ -160,6 +160,7 @@ df_dec = df |>
   mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))  |>
   mutate(`Type 2` = fct_explicit_na(`Type 2`, "No Type 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
 
+
 mean_leg = df_dec |> 
   group_by(Legendary) |> 
   summarise(across(where(is.numeric), mean),n = n()) 
@@ -191,6 +192,7 @@ df_dec |>
   count() |> 
    ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
+
   coord_flip() +
   labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
@@ -228,6 +230,7 @@ df_dec |>
   ggplot(aes(Generation, n, fill = Generation)) +
   geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
 ```
+
 Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
 
 ```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
@@ -238,13 +241,57 @@ df_dec |>
   ggplot(aes(Generation, n, fill = Generation)) +
   geom_bar(stat = 'identity')+
   labs(y="Quantidade de  pokémons") + theme(legend.position = "none")
+Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são água e normal, enquanto para os pokémons lendários se destacam psíquico e dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
+
+```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
+df_dec |> 
+  filter(Legendary == "Não") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+  ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+   ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none")  
 
 ```
+Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo voador, que se destaca para os pokémons lendários. Para os pokémons lendários também se salientas os tipos dragão, lutador e psíquico, enquanto que para os pokémons não lendários temos os tipos venenoso, terrestre e psíquico no top 5 de mais recorrentes.
+
 
 Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do [\textcolor{blue}{"Trio de Aves Lendárias"}](https://pt.wikipedia.org/wiki/Articuno,_Zapdos_e_Moltres) e [\textcolor{blue}{"Trio de Cães Lendários"}](https://poke-storn.blogspot.com/2015/02/os-caes-lendarios-legendary-beasts.html), enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
+### Lançamento por gerações
+Nessa subseção iremos analisar a quantidade de pokémons lançados em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons novos por geração na Figura \@ref(fig:g1).
+```{r g1, fig.cap = "Frequência lançados por geração"}
+df_dec |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
+
+```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+
+  labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+
+Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do "Trio de Aves Lendárias" e "Trio de Cães Lendários", enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
+
 # Análise Preditiva
+
 Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
+
 
 ```{r model}
 set.seed(42)
@@ -380,11 +427,13 @@ Da matriz de confusão podemos derivar as seguintes métricas:
 * Sensibilidade (`sens`): É a proporção de previsões corretas dos casos positivos  
 * Especificidade (`spec`): É a proporção de previsões corretas dos casos negativos  
 
+
 Temos como interesse principal o `ppv` e `sens`, pois estamos preocupados em predizer se o Pokémon **é lendário**, portanto as medidas que focam em acertos de não lendários não são de tamanha importância.
 
 
 
 A Figura ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
+
 ```{r, fig.cap = 'Métricas dos modelos na validação cruzada'}
 autoplot(df_tuner) +
   labs(x = 'Rank do modelo', y= 'Métrica')
