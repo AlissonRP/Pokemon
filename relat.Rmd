@@ -12,6 +12,10 @@ output:
 editor_options:
   chunk_output_type: console
 indent: true
+bibliography: bib.bib
+csl: statistics.csl
+nocite: '@*'
+link-citations: true
 
 
 ---
@@ -188,7 +192,7 @@ df_tuner = df_work %>%
 
 ## Regressão Logística
 
-Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network]. como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
+Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network.] como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
 
 O MLG usando como função de ligação logit pode ser escrito da seguinte maneira:
 $$
@@ -199,7 +203,7 @@ Definindo $\sum_{i=1}^{n}\beta_iX_i$ como $\eta$  fica fácil ver que $p$ pode s
 $$
 p = \dfrac{e^{\eta}}{1+e^{\eta}}
 $$
-Apesar do modelo de regressão logística ser mais utilizado em análise inferencial,  podemos também fazer predições de classes binárias se colocarmos um faixa para a saída ($p$) do modelo ser classificado como de certa classe, em outras palavras se $p \geq T$, onde T é um certo limite pré estabelecido, como não temos em mãos o modelo populacional trabalhamos com a predição $\hat{p}$ para a classificação do Pokémon ser lendário, aqui utilizamos $T = 0.5$.
+Apesar do modelo de regressão logística ser mais utilizado em análise inferencial, podemos também fazer predições de classes binárias se colocarmos um limiar para a saída ($p$) do modelo ser classificado como de certa classe, em outras palavras se $p \geq T$, onde T é um certo limite pré estabelecido, como não temos em mãos o modelo populacional trabalhamos com a predição $\hat{p}$ para a classificação do Pokémon ser lendário, aqui utilizamos $T = 0.5$.
 
 
 ```{r}
@@ -212,25 +216,26 @@ fit1 = df_work %>%
 
 ## Random Forest
 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja.
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pelo gráfico \@ref(fig:vip)
 
 
 
 
-```{r}
+```{r vip, fig.cap='Importância das variáveis na Random Forest nos dados de treino'}
 fit2=df_tuner %>% 
   extract_workflow(id='si_rf') %>% 
   fit(df_train) 
 
 fit2 %>% 
 extract_fit_parsnip() %>% 
-  vip::vip(num_features = 10)
+  vip::vip(num_features = 10, mapping = aes_string(fill = "Variable"))+
+  labs(y="Importância")
 ```
 
 ## Xgboost
 É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
 
-```{r}
+```{r, include=FALSE}
 fit3 = df_tuner %>% 
   extract_workflow(id='si_xg') %>% 
   fit(df_train)
@@ -315,7 +320,7 @@ vetur(final_log) |>
   bind_rows(vetur(final_xg)) |> 
   bind_cols(tibble(Modelo = c('Reg_log','Rand_Forest','xgboost'))) |> 
   select(Modelo, everything()) |> 
-  mypdf1::pdf1_tbl('god')
+  mypdf1::pdf1_tbl('Métricas nos dados de teste')
  
  
 ```
@@ -381,10 +386,8 @@ ggplot(aes(x)) +
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
 
 
-# Bibliografia
-```{r}
+# Referências {-}
 
-```
 
 
 
