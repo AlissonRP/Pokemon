@@ -69,6 +69,7 @@ df$Legendary = factor(df$Legendary, levels = c(1,0))
 #scale_fill_discrete = \(...) mycolors
 
 ```
+
 ```{r}
 graph<-function(df,l , v){
   df %>% 
@@ -81,8 +82,119 @@ graph<-function(df,l , v){
     
 }
 
+d=function(df,v1,v2,px){
+  df %>% 
+    ggplot(aes({{v1}},{{v2}})) +
+    geom_point(size=2.1,color="red")+
+    ggrepel::geom_text_repel(aes(label=n),size=2.8,point.padding = 0.3)
+}
 
+graph<-function(data,l){
+  data %>% 
+    as_tibble() %>% 
+      ggplot(aes(as.numeric(row.names(data  %>% as_tibble())),value))+
+      geom_point(aes(colour = as.factor(df_dec$Legendary)))+
+      geom_hline(yintercept=l, linetype="dashed", color = "black")+
+      geom_hline(yintercept=-l, linetype="dashed", color = "black")+
+      labs(x="Índice") + labs(color='Lendário') 
+}
 
+fit2df<-function(fit) {
+  summary(fit) |>
+    (\(x) x$coefficients)() |>
+    data.frame() |>
+    round(3) |>
+    mutate(P.valor = ifelse(
+      `Pr...t..` < 0.001,"<0.001*",
+      ifelse(`Pr...t..` < 0.05, paste0(`Pr...t..`, '*', sep = ''), `Pr...t..`))) |>
+    select(-`Pr...t..`,
+      "Estimativa" = "Estimate",
+      "Desvio padrão" = "Std..Error",
+      "Estatística t" = "t.value"
+    )
+}
+
+dffts1<-function(fitn,lab1){
+  n = length(fitn$fitted.values)
+  dffits(fitn) %>% 
+ graph(2*sqrt(fitn$rank / n))+
+  labs(title={{lab1}},y="DFfits")
+}
+
+resid1<-function(residuon,lab1){
+ residuon %>% 
+  graph(3)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title={{lab1}},y="Resíduo")
+}
+
+cook1<-function(fitn,lab1){
+    n = length(fitn$fitted.values)
+  cooks.distance(fitn) %>% 
+  graph(4/(n-fitn$rank ))+
+  labs(title={{lab1}},y="Distância de Cook")
+}
+
+alavanca1 <- function(fit){
+  h_bar=fit$rank/length(fit$fitted.values)
+  hatvalues(fit) %>%
+  graph(3*h_bar)+
+  labs(title="Alavancagem",y="Medida de Alavancagem")
+}
+
+dffts<-function(fitn,fitg,lab1,lab2){
+    n = length(fitn$fitted.values)
+  dffits(fitn) %>% 
+ graph(2*sqrt(fitn$rank / n))+
+  labs(title={{lab1}},y="DFfits")+
+    ggrepel::geom_text_repel(aes(label=1:n),size=2.8,point.padding = 0.3) +
+  dffits(fitg) %>% 
+ graph(2*sqrt(fitn$rank / n))+
+  labs(title={{lab2}},y="DFfits")
+}
+
+resid<-function(residuon,residuog,lab1,lab2){
+ residuon %>% 
+  graph(3)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title={{lab1}},y="Resíduo")+
+  residuog %>% 
+  graph(3)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title={{lab2}},y="Resíduo") 
+}
+
+cook<-function(fitn,fitg,lab1,lab2){
+  n = length(fitn$fitted.values)
+  cooks.distance(fitn) %>% 
+  graph(4/(n-fitn$rank ))+ ggrepel::geom_text_repel(aes(label=1:n),size=2.8,point.padding = 0.3) +
+  labs(title={{lab1}},y="Distância de Cook")+
+  cooks.distance(fitg) %>% 
+  graph(4/(n-fitg$rank ))+
+  labs(title={{lab2}},y="Distância de Cook")
+}
+
+alavanca <- function(fit,fit2,lab1,lab2){
+  h_bar=fit$rank/length(fit$fitted.values)
+  h_bar2=fit2$rank/length(fit2$fitted.values)
+  hatvalues(fit) %>%
+  graph(3*h_bar)+
+  labs(title={{lab1}},y="Medida de Alavancagem") +
+  hatvalues(fit2) %>%
+  graph(3*h_bar2)+
+  labs(title={{lab2}},y="Medida de Alavancagem")
+    
+}
+
+geom_hnp <- function(old_hnp){
+  G1 <- with(old_hnp, data.frame(x, lower, upper, median, residuals))
+  G1 %>%
+  ggplot(aes(x)) +
+  geom_point(aes(y = residuals)) +
+  geom_line(aes(y = lower)) +
+  geom_line(aes(y = upper)) +
+  geom_line(aes(y = median), linetype = "dashed")
+}
 
 ```
 
@@ -113,8 +225,6 @@ mean_leg = df_dec |>
 
 mean_leg |> 
   mypdf1::pdf1_tbl('Média dos atributos entre as classificações')
-
-
 
 ```
 Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.  
@@ -166,26 +276,29 @@ Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os 
 
 ### Lançamento por gerações
 Nessa subseção iremos analisar a quantidade de pokémons lançados em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons novos por geração na Figura \@ref(fig:g1).
-```{r g1, fig.cap = "Frequência lançados por geração"}
+```{r g1, fig.cap = "Frequência do total de pokémons por geração"}
 df_dec |> 
   group_by(Generation) |> 
   count() |> 
   ggplot(aes(Generation, n, fill = Generation)) +
-  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
-```
-Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
+  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none") +
+  geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
 
-```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
+```
+Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5.
+
+```{r g2, fig.cap = "Frequência do total de pokémons lendários por geração"}
 df_dec |> 
   filter(Legendary == "Sim") |> 
   group_by(Generation) |> 
   count() |> 
   ggplot(aes(Generation, n, fill = Generation)) +
   geom_bar(stat = 'identity')+
-  labs(y="Novos pokémons") + theme(legend.position = "none")
+  labs(y="Novos pokémons") + theme(legend.position = "none") +
+  geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
 ```
 
-Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do "Trio de Aves Lendárias" e "Trio de Cães Lendários", enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
+Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários.
 
 # Análise Preditiva
 Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
@@ -214,11 +327,22 @@ df_xgb =
    set_engine("xgboost")
 
 
+df_boostado <- boost_tree(trees = 1000,
+                        tree_depth = 7,
+                        min_n = 6,
+                        learn_rate = 0.07464001,
+                        sample_size = 0.8941112,
+                        mtry = 2,
+                        loss_reduction = 1.879964e-06
+                       ) |>
+  set_engine('xgboost') |> 
+  set_mode("classification")
+
 ```
 
 ```{r}
 df_work = workflow_set(list(si=df_rec1),
-                     list(logistic=df_rl,rf=df_rf, xg = df_xgb), cross=T)
+                     list(logistic=df_rl,rf=df_rf, xg = df_xgb, df_boostado), cross=T)
 ```
 ```{r}
 set.seed(42)
@@ -228,7 +352,7 @@ df_tuner = df_work %>%
                resamples=df_vf,
                grid=15,
                metrics=metric_set(roc_auc, specificity, sensitivity), verbose=T)
-
+# Não entendi oq isso faz
 ```
 
 
@@ -280,10 +404,19 @@ extract_fit_parsnip() %>%
 É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados igual em Random Forest, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
 
 
-```{r, include=FALSE}
+```{r, include=FALSE, results = F}
 fit3 = df_tuner %>% 
   extract_workflow(id='si_xg') %>% 
   fit(df_train)
+```
+
+
+### Tune
+
+```{r}
+fit4 = df_work %>% 
+  extract_workflow("si_boost_tree_4") %>% 
+  fit(data = df_train)
 ```
 
 
@@ -317,6 +450,17 @@ fit3 |>
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
                          de XgBoost')
 ```
+comentários
+
+```{r}
+fit4 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de XgBoost tunnado')
+```
+comentários
+
 Da matriz de confusão podemos derivar as seguintes métricas:  
 
 * Valor predito positivo (`ppv`): Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
@@ -395,42 +539,121 @@ fit1 = df_work %>%
 Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados, 
 
 ```{r}
-diagreg::cook(fit1)
+cook1(fit1, "Distância do Modelo 1") + ggrepel::geom_text_repel(aes(label=1:800),size=2.8,point.padding = 0.3)
 ```
-
+Pontos ppossivelmente influentes => 430 e 415
 
 ### Dffits
 No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
 
 ```{r}
-diagreg::dffts(fit1)
+dffts1(fit1, "Dffits do Modelo 1")+ ggrepel::geom_text_repel(aes(label=1:800),size=2.8,point.padding = 0.3)
 ```
+
+Pontos ppossivelmente influentes => 262, 72, 314, 430, 416 e 415
 
 O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
 
 
 
 ```{r}
-diagreg::Resid(fit1)
+rstudent(fit1)|>
+resid1("Resíduos do Modelo 1")
 ```
 
 
 E por último o envelope simulado, que fornce um vislumbre se a distribuição é adequada para o ajuste
 ```{r, results = F, fig.show='hide'}
 g1 <- hnp::hnp(fit1, resid.type="deviance", halfnormal = F)
-G1 <- with(g1, data.frame(x, lower, upper, median, residuals))
+g1 |>
+  geom_hnp()
 ```
+
 
 ```{r}
-G1 %>%
-ggplot(aes(x)) +
-  geom_point(aes(y = residuals)) +
-  geom_line(aes(y = lower)) +
-  geom_line(aes(y = upper)) +
-  geom_line(aes(y = median), linetype = "dashed")
+influ <- influence.measures(fit1)
+as.data.frame(influ$is.inf) %>% filter_all(any_vars(. == TRUE)) |> #%>% mypdf1::pdf1_tbl('Diferentes medidas de influência')
+rownames(p) |>
+  as.numeric() -> del_row
+df_dec |>
+  filter(!row_number() %in% del_row)
 ```
 
+
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
+
+```{r, eval = FALSE}
+df_boost <- boost_tree(trees = 1000,
+                        tree_depth = tune(),
+                        min_n = tune(),
+                        learn_rate = tune(),
+                        sample_size = tune(),
+                        mtry = tune(),
+                        loss_reduction = tune()
+                       ) |>
+  set_engine('xgboost') |> 
+  set_mode("classification")
+
+xgb_grid <- grid_latin_hypercube(
+  tree_depth(),
+  min_n(),
+  loss_reduction(),
+  sample_size = sample_prop(),
+  finalize(mtry(), df_train),
+  learn_rate(),
+  size = 30
+)
+
+tune_work <- workflow() %>%
+    add_model(df_boost) %>%
+    add_recipe(df_rec1)
+
+tune_results <- tune_grid(
+    object     = tune_work,
+    resamples  = df_vf,
+    param_info = parameters(tune_work),
+    grid       = xgb_grid,
+    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
+    control    = control_grid(save_pred = TRUE)
+)
+
+collect_metrics(tune_results)
+
+
+show_best(tune_results, metric = "sens") #[3,]
+
+
+tuned_best <- select_best(tune_results, metric = "roc_auc") #[3,]
+tuned_best2 <-tune_results %>%
+    select_best("sens")
+fin_wflw <- tune_work  %>%
+    finalize_workflow(parameters = tuned_best)
+fin_wflw1 <- tune_work  %>%
+    finalize_workflow(parameters = tuned_best2)
+wflw_fit <- fin_wflw %>%
+    fit(df_train)
+wflw_fit1 <- fin_wflw1 %>%
+    fit(df_train) 
+
+wflw_fit |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+wflw_fit1 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+
+#tune_results |>
+#  collect_metrics() |>
+#  filter(.metric == "sens") |> arrange(desc(mean)) |> View()
+#tune_results |>
+#  collect_metrics() |>
+#  filter(.metric == "spec") |> arrange(desc(mean)) |> View()
+```
+
 
 
 # Referências {-}

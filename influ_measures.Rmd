@@ -1,0 +1,576 @@
+---
+title: "Explorando a mística de Pokémon: Caracterização de Pokémons Lendários "
+author: "Alisson Rosa e Vítor Pereira "
+abstract: "Pokémon são criaturas que vivem em todos os lugares, livres na natureza ou com os humanos, cada Pokémom tem seu tipo, pontos fortes e fracos. Com isso o objetivo desse trabalho é analisar suas estatísticas, desenvolvendo gráficos e tabelas e também construindo um modelo que dados as características do Pokémon ele irá nos fornecer uma predição se o Pokémon é lendário ou não."
+header-includes:
+   - \usepackage[brazil]{babel}
+   - \usepackage{bm}
+   - \usepackage{float}
+geometry: left=1.7cm, right=1.7cm, top=2.5cm, bottom=2.5cm
+output:
+  bookdown::pdf_document2:
+editor_options:
+  chunk_output_type: console
+indent: true
+bibliography: bib.bib
+csl: statistics.csl
+nocite: '@*'
+link-citations: true
+
+
+---
+
+
+
+```{r setup,include=F}
+
+options(digits=3)  #Arrendodamento
+options(scipen=999)
+
+ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no ggplot2
+knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=3.85)
+#scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set1") #Fixa a scale do fill dos gráficos do ggplot2
+
+```
+
+
+
+
+
+```{r}
+
+#citar pokemonfandom
+library(tidyverse)
+library(tidymodels)
+library(themis)
+library(patchwork)
+#https://www.datanovia.com/en/blog/easy-way-to-expand-color-palettes-in-r/
+
+df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
+  select(-`#`, -Name, -Total) |> 
+  mutate(Legendary = factor(ifelse(Legendary == T, 1, 0)),
+         Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) ))
+         #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
+df$Legendary = factor(df$Legendary, levels = c(1,0))
+
+#cols = length(levels(factor(df$`Type 1`)))
+#mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
+#scale_fill_discrete = \(...) mycolors
+
+```
+
+```{r}
+graph<-function(df,l , v){
+  df %>% 
+    as_tibble() %>% 
+      ggplot(aes(as.numeric(row.names(df  %>% as_tibble())),value, color = {{v}}))+
+      geom_point()+
+      geom_hline(yintercept=l, linetype="dashed", color = "red")+
+      geom_hline(yintercept=-l, linetype="dashed", color = "red")+
+      labs(x="Índice")
+    
+}
+
+d=function(df,v1,v2,px){
+  df %>% 
+    ggplot(aes({{v1}},{{v2}})) +
+    geom_point(size=2.1,color="red")+
+    ggrepel::geom_text_repel(aes(label=n),size=2.8,point.padding = 0.3)
+}
+
+graph<-function(data,l, df){
+  #if(df == "1"){
+  #  df = df
+  #}else{
+  #  df = df1
+  #}
+  data %>% 
+    as_tibble() %>% 
+      ggplot(aes(as.numeric(row.names(data  %>% as_tibble())),value))+
+      geom_point(aes(colour = as.factor(df$Legendary)))+
+      geom_hline(yintercept=l, linetype="dashed", color = "black")+
+      geom_hline(yintercept=-l, linetype="dashed", color = "black")+
+      labs(x="Índice") + labs(color='Lendário') 
+}
+
+fit2df<-function(fit) {
+  summary(fit) |>
+    (\(x) x$coefficients)() |>
+    data.frame() |>
+    round(3) |>
+    mutate(P.valor = ifelse(
+      `Pr...t..` < 0.001,"<0.001*",
+      ifelse(`Pr...t..` < 0.05, paste0(`Pr...t..`, '*', sep = ''), `Pr...t..`))) |>
+    select(-`Pr...t..`,
+      "Estimativa" = "Estimate",
+      "Desvio padrão" = "Std..Error",
+      "Estatística t" = "t.value"
+    )
+}
+
+dffts1<-function(fitn,lab1,df){
+  n = length(fitn$fitted.values)
+  dffits(fitn) %>% 
+ graph(2*sqrt(fitn$rank / n),df)+
+  labs(title={{lab1}},y="DFfits")
+}
+
+resid1<-function(residuon,lab1, df){
+ residuon %>% 
+  graph(3,df)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title={{lab1}},y="Resíduo")
+}
+
+cook1<-function(fitn,lab1, df){
+    n = length(fitn$fitted.values)
+  cooks.distance(fitn) %>% 
+  graph(4/(n-fitn$rank ), df)+
+  labs(title={{lab1}},y="Distância de Cook")
+}
+
+alavanca1 <- function(fit,df){
+  h_bar=fit$rank/length(fit$fitted.values)
+  hatvalues(fit) %>%
+  graph(3*h_bar,df)+
+  labs(title="Alavancagem",y="Medida de Alavancagem")
+}
+
+dffts<-function(fitn,fitg,lab1,lab2){
+    n = length(fitn$fitted.values)
+  dffits(fitn) %>% 
+ graph(2*sqrt(fitn$rank / n))+
+  labs(title={{lab1}},y="DFfits")+
+    ggrepel::geom_text_repel(aes(label=1:n),size=2.8,point.padding = 0.3) +
+  dffits(fitg) %>% 
+ graph(2*sqrt(fitn$rank / n))+
+  labs(title={{lab2}},y="DFfits")
+}
+
+resid<-function(residuon,residuog,lab1,lab2){
+ residuon %>% 
+  graph(3)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title={{lab1}},y="Resíduo")+
+  residuog %>% 
+  graph(3)+
+  geom_hline(yintercept = 0, linetype="dotted", color = "red")+
+  labs(title={{lab2}},y="Resíduo") 
+}
+
+cook<-function(fitn,fitg,lab1,lab2){
+  n = length(fitn$fitted.values)
+  cooks.distance(fitn) %>% 
+  graph(4/(n-fitn$rank ))+ ggrepel::geom_text_repel(aes(label=1:n),size=2.8,point.padding = 0.3) +
+  labs(title={{lab1}},y="Distância de Cook")+
+  cooks.distance(fitg) %>% 
+  graph(4/(n-fitg$rank ))+
+  labs(title={{lab2}},y="Distância de Cook")
+}
+
+alavanca <- function(fit,fit2,lab1,lab2){
+  h_bar=fit$rank/length(fit$fitted.values)
+  h_bar2=fit2$rank/length(fit2$fitted.values)
+  hatvalues(fit) %>%
+  graph(3*h_bar)+
+  labs(title={{lab1}},y="Medida de Alavancagem") +
+  hatvalues(fit2) %>%
+  graph(3*h_bar2)+
+  labs(title={{lab2}},y="Medida de Alavancagem")
+    
+}
+
+geom_hnp <- function(old_hnp){
+  G1 <- with(old_hnp, data.frame(x, lower, upper, median, residuals))
+  G1 %>%
+  ggplot(aes(x)) +
+  geom_point(aes(y = residuals)) +
+  geom_line(aes(y = lower)) +
+  geom_line(aes(y = upper)) +
+  geom_line(aes(y = median), linetype = "dashed")
+}
+
+df_dec = df |> 
+  mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))  |>
+  mutate(`Type 2` = fct_explicit_na(`Type 2`, "Sem Tipo 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
+
+mean_leg = df_dec |> 
+  group_by(Legendary) |> 
+  summarise(across(where(is.numeric), mean),n = n()) 
+
+mean_leg |> 
+  mypdf1::pdf1_tbl('Média dos atributos entre as classificações')
+
+```
+
+
+# Análise Preditiva
+
+```{r }
+set.seed(42)
+df_split = initial_split(df |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.75 , strata = Legendary)
+df_train = training(df_split)
+df_test = testing(df_split)
+df_vf = vfold_cv(df_train, 10, strata = Legendary)
+```
+
+```{r}
+df_rec1 = df_train |> 
+  recipe(Legendary ~.) 
+
+df_rl = logistic_reg() |> 
+  set_engine('glm')
+
+
+
+```
+
+```{r}
+df_work = workflow_set(list(si=df_rec1),
+                     list(logistic=df_rl), cross=T)
+```
+
+```{r}
+set.seed(42)
+doParallel::registerDoParallel(cores=2)
+df_tuner = df_work %>% 
+  workflow_map("tune_grid",
+               resamples=df_vf,
+               grid=15,
+               metrics=metric_set(roc_auc, specificity, sensitivity), verbose=T)
+# Não entendi oq isso faz
+```
+
+
+
+
+```{r}
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df_train)
+```
+
+
+
+```{r}
+fit1 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+```
+comentários
+
+
+
+
+Da matriz de confusão podemos derivar as seguintes métricas:  
+
+* Valor predito positivo (`ppv`): Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
+* Valor predito negativo (`npv`): Por definição é a proporção de predições negativas que foram corretamentes previstas  
+* Sensibilidade (`sens`): É a proporção de previsões corretas dos casos positivos  
+* Especificidade (`spec`): É a proporção de previsões corretas dos casos negativos
+
+
+
+
+E para os dados de teste temos: 
+
+```{r }
+#Cria as métricas nos dados de teste
+metric = function(id){
+  df_tuner %>% 
+  extract_workflow(id=id) |>
+  last_fit(split = df_split, metrics = metric_set(roc_auc, sens, spec, ppv, npv)) |> 
+  collect_metrics()
+}
+#Cria o dataframe das métricas
+vetur = function(final){
+   final_logis = final|> with(.estimate) 
+ names(final_logis) = final |> with(.metric)
+ final_logis |> 
+  as.list() |> 
+  data.frame()
+  
+}
+
+final_log = metric('si_logistic')
+
+ 
+ 
+ 
+ #faz a tabela
+oh_yeah = vetur(final_log) |> 
+  bind_cols(tibble(Modelo = c('Regressão Logistica'))) |> 
+  select(Modelo, everything()) 
+
+oh_yeah |> 
+  mypdf1::pdf1_tbl('Métricas nos dados de teste')
+ 
+ 
+```
+Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilidade é `r oh_yeah |> filter(sens == max(sens)) |> select(Modelo)`
+
+
+
+# Análise Inferencial
+
+## Análise de Dignóstico
+Vamos nessa seção avaliar a existência de pontos influentes no modelo de Regressão logística
+
+```{r}
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df) |> 
+  with(fit) |> with(fit) |> with(fit)
+```
+
+
+`
+
+
+### Distância de cook
+Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados, 
+
+```{r}
+cook1(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:800),size=2.8,point.padding = 0.3)
+```
+Pontos ppossivelmente influentes => 430 e 415
+
+### Dffits
+No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
+
+```{r}
+dffts1(fit1, "Dffits do Modelo 1", df)+ ggrepel::geom_text_repel(aes(label=1:800),size=2.8,point.padding = 0.3)
+```
+
+Pontos ppossivelmente influentes => 262, 72, 314, 430, 416 e 415
+
+O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
+
+
+
+```{r}
+rstudent(fit1)|>
+resid1("Resíduos do Modelo 1", df)
+```
+
+
+E por último o envelope simulado, que fornce um vislumbre se a distribuição é adequada para o ajuste
+```{r, results = F, fig.show='hide'}
+g1 <- hnp::hnp(fit1, resid.type="deviance", halfnormal = F)
+g1 |>
+  geom_hnp()
+```
+
+
+```{r}
+influ <- influence.measures(fit1)
+as.data.frame(influ$is.inf) %>% filter_all(any_vars(. == TRUE)) |> #%>% mypdf1::pdf1_tbl('Diferentes medidas de influência')
+rownames(p) |>
+  as.numeric() -> del_row
+df2 <- df_dec |>
+  filter(!row_number() %in% del_row)
+#df1 <- df_dec |>
+#  filter(!row_number() %in% c(262, 72, 314, 430, 416, 415))
+df1 <- df_dec |>
+  filter(!row_number() %in% c(262, 72, 314, 430, 416, 415)) |>
+  filter(!row_number() %in% c(425,424,790)) |>
+  filter(!row_number() %in% c(412,121))
+  
+```
+
+# Deletando 415 e 430
+
+```{r model}
+set.seed(42)
+df_split = initial_split(df1 |> select(-`Type 1`,-`Type 2`, -Generation), prop = 0.75 , strata = Legendary)
+df_train = training(df_split)
+df_test = testing(df_split)
+df_vf = vfold_cv(df_train, 10, strata = Legendary)
+```
+
+```{r}
+df_rec1 = df_train |> 
+  recipe(Legendary ~.) 
+
+df_rf = rand_forest(mode = 'classification', trees = 500) |> 
+  set_engine('ranger', importance = "impurity")
+
+
+df_rl = logistic_reg() |> 
+  set_engine('glm')
+
+df_xgb = 
+   boost_tree(mode = 'classification') |> 
+   set_engine("xgboost")
+
+
+```
+
+```{r}
+df_work = workflow_set(list(si=df_rec1),
+                     list(logistic=df_rl,rf=df_rf, xg = df_xgb), cross=T)
+
+set.seed(42)
+doParallel::registerDoParallel(cores=2)
+
+df_tuner = df_work %>% 
+  workflow_map("tune_grid",
+               resamples=df_vf,
+               grid=15,
+               metrics=metric_set(roc_auc, specificity, sensitivity), verbose=T)
+# Não entendi oq isso faz
+
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df_train)
+
+fit2=df_tuner %>% 
+  extract_workflow(id='si_rf') %>% 
+  fit(df_train) 
+
+fit2 %>% 
+extract_fit_parsnip() %>% 
+  vip::vip(num_features = 10, mapping = aes_string(fill = "Variable"))+
+  labs(y="Importância")
+
+fit3 = df_tuner %>% 
+  extract_workflow(id='si_xg') %>% 
+  fit(df_train)
+```
+
+
+
+Uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possui os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
+
+```{r}
+fit1 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+```
+comentários
+
+
+
+```{r}
+fit2 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Random Forest')
+```
+comentários
+
+
+```{r}
+fit3 |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de XgBoost')
+```
+comentários
+
+
+
+O gráfico ref fornece o vislumbre de como as métricas se comportam para os 3 modelos ajustados na validação cruzada
+```{r, fig.cap = 'Métricas dos modelos na validação cruzada'}
+autoplot(df_tuner) +
+  labs(x = 'Rank do modelo', y= 'Métrica')
+```
+
+
+E para os dados de teste temos: 
+
+```{r yeah}
+#Cria as métricas nos dados de teste
+metric = function(id){
+  df_tuner %>% 
+  extract_workflow(id=id) |>
+  last_fit(split = df_split, metrics = metric_set(roc_auc, sens, spec, ppv, npv)) |> 
+  collect_metrics()
+}
+#Cria o dataframe das métricas
+vetur = function(final){
+   final_logis = final|> with(.estimate) 
+ names(final_logis) = final |> with(.metric)
+ final_logis |> 
+  as.list() |> 
+  data.frame()
+  
+}
+
+final_log = metric('si_logistic')
+final_rf = metric('si_rf')
+final_xg = metric('si_xg')
+ 
+ 
+ 
+ #faz a tabela
+oh_yeah = vetur(final_log) |> 
+  bind_rows(vetur(final_rf)) |> 
+  bind_rows(vetur(final_xg)) |> 
+  bind_cols(tibble(Modelo = c('Regressão Logistica','Random Forest','xgboost'))) |> 
+  select(Modelo, everything()) 
+
+oh_yeah |> 
+  mypdf1::pdf1_tbl('Métricas nos dados de teste')
+ 
+ 
+```
+Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilidade é `r oh_yeah |> filter(sens == max(sens)) |> select(Modelo)`
+
+
+
+# Análise Inferencial
+
+## Análise de Dignóstico
+Vamos nessa seção avaliar a existência de pontos influentes no modelo de Regressão logística
+
+```{r}
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df1) |> 
+  with(fit) |> with(fit) |> with(fit)
+```
+
+
+`
+
+
+### Distância de cook
+Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados, 
+
+```{r}
+cook1(fit1, "Distância do Modelo 1", df1) + ggrepel::geom_text_repel(aes(label=1:nrow(df1)),size=2.8,point.padding = 0.3)
+```
+Pontos ppossivelmente influentes => 528,410,406, 787 depois 266, 485, 690
+### Dffits
+No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
+
+```{r}
+dffts1(fit1, "Dffits do Modelo 1", df1)+ ggrepel::geom_text_repel(aes(label=1:nrow(df1)),size=2.8,point.padding = 0.3)
+```
+
+Pontos ppossivelmente influentes => 422, 528, 690, 692, 787, 102, 153, 366,410,537
+
+O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
+
+
+
+```{r}
+rstudent(fit1)|>
+resid1("Resíduos do Modelo 1", df1)
+```
+
+
+E por último o envelope simulado, que fornce um vislumbre se a distribuição é adequada para o ajuste
+```{r, results = F, fig.show='hide'}
+g1 <- hnp::hnp(fit1, resid.type="deviance", halfnormal = F)
+g1 |>
+  geom_hnp()
+```
+
