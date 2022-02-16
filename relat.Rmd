@@ -1,5 +1,5 @@
 ---
-title: "title"
+title: "Explorando a mística de Pokémon: Caracterização de Pokémons Lendários "
 author: "Alisson Rosa e Vítor Pereira "
 abstract: "Pokémon são criaturas que vivem em todos os lugares, livres na natureza ou com os humanos, cada Pokémom tem seu tipo, pontos fortes e fracos. Com isso o objetivo desse trabalho é analisar suas estatísticas, desenvolvendo gráficos e tabelas e também construindo um modelo que dados as características do Pokémon ele irá nos fornecer uma predição se o Pokémon é lendário ou não."
 header-includes:
@@ -99,7 +99,8 @@ Nessa subseção vamos vislumbrar os atributos dos Pokémon constrastando  entre
 
 ```{r}
 df_dec = df |> 
-  mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))
+  mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))  |>
+  mutate(`Type 2` = fct_explicit_na(`Type 2`, "Sem Tipo 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
 
 mean_leg = df_dec |> 
   group_by(Legendary) |> 
@@ -118,25 +119,42 @@ Assim, como esperado os pokémom lendários possuem atributos superiores (na mé
 Vamos aqui estudar a quantidade de tipos por classificação dos Pokémons. O gráfico \@ref(fig:ref) fornece um vislumbre
 
 
-```{r ref, E, fig.cap = "Frequência de Pokémons Lendários e Não Lendários por Tipo"}
+```{r ref, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo"}
 df_dec |> 
   filter(Legendary == "Não") |> 
   group_by(`Type 1`) |> 
   count() |> 
   ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip()+
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários", x = "Tipo Principal") +
 df_dec |> 
   filter(Legendary == "Sim") |> 
   group_by(`Type 1`) |> 
   count() |> 
    ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip()+ plot_layout(guides = "collect") & theme(legend.position = "none")
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários", x = "Tipo Principal") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
 ```
+Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são Água e Normal, enquanto para os pokémons lendários se destacam Psíquico e Dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
 
+```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
+df_dec |> 
+  filter(Legendary == "Não") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+  ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários", x = "Tipo Secundário") +
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(`Type 2`) |> 
+  count() |> 
+   ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
+  geom_bar(stat = 'identity')+
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários", x = "Tipo Secundário") + plot_layout(guides = "collect") & theme(legend.position = "none")  
 
+```
 
 
 # Análise Preditiva
