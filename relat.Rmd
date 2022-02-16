@@ -145,7 +145,7 @@ df_dec |>
 
 
 # Análise Preditiva
-Vamos aqui utilizar como variável de desfecho a classificação do pokémom, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de avaliação vamos utilizar a área sobre a curva roc e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
+Vamos aqui utilizar como variável de desfecho a classificação do pokémom, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
 
 ```{r model}
 set.seed(42)
@@ -192,7 +192,7 @@ df_tuner = df_work %>%
 
 ## Regressão Logística
 
-Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network.] como  modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
+Regressão logistíca é um dos principais modelo estatístico atuais, pode ser descrito ^[Ou também um caso simples de uma neural network.] como um modelo linear generalizado (MLG). Vamos considerar $p$ a probabilidade de sucesso de uma certa variável binária, ou seja uma variável que tem distribuição Bernoulli.
 
 O MLG usando como função de ligação logit pode ser escrito da seguinte maneira:
 $$
@@ -216,7 +216,7 @@ fit1 = df_work %>%
 
 ## Random Forest
 
-Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando o conjunto de treinamento de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pelo gráfico \@ref(fig:vip)
+Árvores de decisão são modelos que já existem a um certo tempo, apesar de terem uma grande vantagem em interpretabilidade são fracas em termos preditivos, assim a  idéia de Random Forest é combinar diversas árvores alterando (bootstrap) o conjunto de treinamento  de cada uma elas para gerar diversidade na predição, as árvores podem individualmente não serem fortes preditoras mas queremos no geral a predição combinada delas seja. Uma peculiaridade da Random Forest é que podemos ver a importância^[Importância aqui: Decréscimo médio na impureza.] das variáveis, o que é ilustrado pelo gráfico \@ref(fig:vip)
 
 
 
@@ -233,7 +233,7 @@ extract_fit_parsnip() %>%
 ```
 
 ## Xgboost
-É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
+É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados igual em Random Forest, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
 
 ```{r, include=FALSE}
 fit3 = df_tuner %>% 
@@ -290,7 +290,7 @@ autoplot(df_tuner) +
 
 E para os dados de teste temos: 
 
-```{r}
+```{r yeah}
 #Cria as métricas nos dados de teste
 metric = function(id){
   df_tuner %>% 
@@ -315,16 +315,18 @@ final_xg = metric('si_xg')
  
  
  #faz a tabela
-vetur(final_log) |> 
+oh_yeah = vetur(final_log) |> 
   bind_rows(vetur(final_rf)) |> 
   bind_rows(vetur(final_xg)) |> 
-  bind_cols(tibble(Modelo = c('Reg_log','Rand_Forest','xgboost'))) |> 
-  select(Modelo, everything()) |> 
+  bind_cols(tibble(Modelo = c('Regressão Logistica','Random Forest','xgboost'))) |> 
+  select(Modelo, everything()) 
+
+oh_yeah |> 
   mypdf1::pdf1_tbl('Métricas nos dados de teste')
  
  
 ```
-
+Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilidade é `r oh_yeah |> filter(sens == max(sens)) |> select(Modelo)`
 
 
 
