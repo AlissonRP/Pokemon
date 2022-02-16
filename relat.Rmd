@@ -126,17 +126,17 @@ df_dec |>
   count() |> 
   ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários", x = "Tipo Principal") +
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
 df_dec |> 
   filter(Legendary == "Sim") |> 
   group_by(`Type 1`) |> 
   count() |> 
    ggplot(aes(`Type 1`, n, fill = `Type 1`)) +
   geom_bar(stat = 'identity')+
-  coord_flip() + labs(y="Frequência para os Pokémons Lendários", x = "Tipo Principal") + plot_layout(guides = "collect") & theme(legend.position = "none") 
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
 ```
-Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são Água e Normal, enquanto para os pokémons lendários se destacam Psíquico e Dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
+Com a Figura \@ref(fig:ref) nota-se nos pokémons não lendários temos que os tipos que se destacam numericamente são água e normal, enquanto para os pokémons lendários se destacam psíquico e dragão, ou seja, tipos mais místicos. Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
 
 ```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
 df_dec |> 
@@ -145,17 +145,42 @@ df_dec |>
   count() |> 
   ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
   geom_bar(stat = 'identity')+
-  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários", x = "Tipo Secundário") +
+  coord_flip()+ labs(y="Frequência para os Pokémons não Lendários") +
 df_dec |> 
   filter(Legendary == "Sim") |> 
   group_by(`Type 2`) |> 
   count() |> 
    ggplot(aes(`Type 2`, n, fill = `Type 2`)) +
   geom_bar(stat = 'identity')+
-  coord_flip() + labs(y="Frequência para os Pokémons Lendários", x = "Tipo Secundário") + plot_layout(guides = "collect") & theme(legend.position = "none")  
+  coord_flip() + labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none")  
 
 ```
+Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo voador, que se destaca para os pokémons lendários. Para os pokémons lendários também se salientas os tipos dragão, lutador e psíquico, enquanto que para os pokémons não lendários temos os tipos venenoso, terrestre e psíquico no top 5 de mais recorrentes.
 
+
+
+### Lançamento por gerações
+Nessa subseção iremos analisar a quantidade de pokémons lançados em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons novos por geração na Figura \@ref(fig:g1).
+```{r g1, fig.cap = "Frequência lançados por geração"}
+df_dec |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+ labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
+
+```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
+df_dec |> 
+  filter(Legendary == "Sim") |> 
+  group_by(Generation) |> 
+  count() |> 
+  ggplot(aes(Generation, n, fill = Generation)) +
+  geom_bar(stat = 'identity')+
+  labs(y="Novos pokémons") + theme(legend.position = "none")
+```
+
+Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do "Trio de Aves Lendárias" e "Trio de Cães Lendários", enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
 # Análise Preditiva
 Vamos aqui utilizar como variável de desfecho a classificação do pokémom, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de avaliação vamos utilizar a área sobre a curva roc e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)*100`% de acurácia.
