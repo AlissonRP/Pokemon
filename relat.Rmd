@@ -438,15 +438,15 @@ Nessa seção veremos as medidas de alavancagem, que informam se uma observaçã
 alavanca(fit1,df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
-Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 `r nome[262,1]`, devido ao fato que este pokémon é o que mais achata a Figura.
+Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 (`r nome[262,1]`), devido ao fato que este pokémon é o que mais achata a Figura, mas também temos outras observações acima do limite da medida de alavancagem estipulado.
 
 
 
-### Distância de cook
-Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados, 
+### Distância de Cook
+Outra medida interessante para ponto aberrantes é a Distância de Cook ($D_i$), que mede essencialmente a influência das observações sobre os parâmetros e o ajuste, avaliando a influência de o que pequenas pertubarções nas variâncias das observações causam nas estimativas dos parâmetros. Ou de forma simplificada, temos a influência da observação $i$ sobre todos os $n$ valores ajustados, 
 
 ```{r}
-#cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:800), size=2.8, point.padding = 0.3)
+cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
 
@@ -462,8 +462,8 @@ O gráfico de resíduos também é importante para verificarmos visualmente a m�
 
 
 ```{r}
-#resid(fit1)|>
-#Resid("Resíduos do Modelo 1", df)
+residuals(fit1,type="deviance")|>
+Resid("Resíduos do Modelo 1", df)
 ```
 
 
