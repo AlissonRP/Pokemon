@@ -203,7 +203,7 @@ ffit3 = df_tuner1 %>%
 
 Não devemos somente avaliar os gráficos de influência, mas também sua previsão, então tem-se que uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possui os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
 
-```{r}
+```{r t1}
 ffit1 |> 
   predict(new_data = df_test1) |> bind_cols(df_test1 |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
@@ -211,7 +211,7 @@ ffit1 |>
                          de Regressão logística')
 ```
 
-```{r}
+```{r t2}
 ffit2 |> 
   predict(new_data = df_test1) |> bind_cols(df_test1 |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
@@ -219,7 +219,7 @@ ffit2 |>
                          de Random Forest')
 ```
 
-```{r}
+```{r t3}
 ffit3 |> 
   predict(new_data = df_test1) |> bind_cols(df_test1 |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
@@ -243,25 +243,25 @@ ffit1 = df_work1 %>%
 #### Alavancagem
 Nessa seção veremos as medidas de alavancagem, que informam se uma observação é discrepante em termos de covariável, ou seja, utilizando os resíduos busca medir a discrepância entre o valor observado e o valor ajustado.
 
-```{r}
+```{r f1, fig.cap="Medidas de alavancagem do Modelo com poucas exclusões"}
 alavanca(ffit1,df1)+ ggrepel::geom_text_repel(aes(label=1:nrow(df1)), size=2.8, point.padding = 0.3)
 ```
 Podemos perceber que continuam existindo pontos fora do intervalo traçado para alavancagem.
 
 
-#### Distância de cook
-Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados. 
+#### Distância de Cook
+Tem-se também a distância de Cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados. 
 
-```{r}
+```{r f2, fig.cap="Distância de Cook do Modelo com poucas exclusões"}
 cook(ffit1, "Distância do Modelo 1", df1) + ggrepel::geom_text_repel(aes(label=1:nrow(df1)),size=2.8,point.padding = 0.3)
 ```
 A existência de observações possivelmente discrepantes, ainda não foi reduzida visualmente.
 
 
-#### Dffits
-No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
+#### DFFITS
+No diagnóstico DFFITS, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
 
-```{r}
+```{r f3, fig.cap="DFFITS do Modelo com poucas exclusões"}
 dffts(ffit1, "Dffits do Modelo 1", df1)+ ggrepel::geom_text_repel(aes(label=1:nrow(df1)),size=2.8,point.padding = 0.3)
 ```
 
@@ -272,7 +272,7 @@ Não observa-se uma mudança perceptível quanto ao achatamento do gráfico.
 
 O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
 
-```{r}
+```{r f4, fig.cap="Resíduos do Modelo com poucas exclusões"}
 rstudent(ffit1)|>
 Resid("Resíduos do Modelo 1", df1)
 ```
@@ -282,6 +282,10 @@ Para os resíduos, os pontos continuam dentro dos limites desenvolvidos.
 E por último o envelope simulado, que fornece um vislumbre se a distribuição é adequada para o ajuste
 ```{r, results = F, fig.show='hide'}
 g1 <- hnp::hnp(ffit1, resid.type="deviance", halfnormal = F)
+```
+
+
+```{r f5, fig.cap="Envelope Simulado do Modelo com poucas exclusões"}
 g1 |>
   geom_hnp()
 ```
@@ -334,7 +338,7 @@ ffit32 = df_tuner12 %>%
 
 Não devemos somente avaliar os gráficos de influência, mas também sua previsão, então tem-se que uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possui os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
 
-```{r}
+```{r ff1}
 ffit12 |> 
   predict(new_data = df_test12) |> bind_cols(df_test12 |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
@@ -342,7 +346,7 @@ ffit12 |>
                          de Regressão logística')
 ```
 
-```{r}
+```{r ff2}
 ffit22 |> 
   predict(new_data = df_test12) |> bind_cols(df_test12 |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
@@ -350,7 +354,7 @@ ffit22 |>
                          de Random Forest')
 ```
 
-```{r}
+```{r ff3}
 ffit3 |> 
   predict(new_data = df_test12) |> bind_cols(df_test12 |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
@@ -374,7 +378,7 @@ ffit12 = df_work12 %>%
 #### Alavancagem
 Nessa seção veremos as medidas de alavancagem, que informam se uma observação é discrepante em termos de covariável, ou seja, utilizando os resíduos busca medir a discrepância entre o valor observado e o valor ajustado.
 
-```{r }
+```{r f6, fig.cap="Gráfico das medidas de alavancagem do Modelo com muitas exclusões" }
 alavanca(ffit12,df2)+ ggrepel::geom_text_repel(aes(label=1:nrow(df2)), size=2.8, point.padding = 0.3)
 ```
 Ainda continuamos a perceber pontos fora do intervalo traçado para alavancagem.
@@ -383,16 +387,16 @@ Ainda continuamos a perceber pontos fora do intervalo traçado para alavancagem.
 #### Distância de cook
 Tem-se também a distância de cook, que fornece a influência da observação $i$ sobre todos os $n$ valores ajustados. 
 
-```{r}
+```{r f7, fig.cap="Distância de Cook do Modelo com muitas exclusões"}
 cook(ffit12, "Distância do Modelo 1", df2) + ggrepel::geom_text_repel(aes(label=1:nrow(df2)),size=2.8,point.padding = 0.3)
 ```
 A existência de observações possivelmente discrepantes, ainda não foi reduzida visualmente.
 
 
-#### Dffits
-No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
+#### DFFITS
+No diagnóstico DFFITS, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
 
-```{r}
+```{r f8, fig.cap="DFFITS do Modelo com muitas exclusões"}
 dffts(ffit12, "Dffits do Modelo 1", df2)+ ggrepel::geom_text_repel(aes(label=1:nrow(df2)),size=2.8,point.padding = 0.3)
 ```
 Observa-se que o achatamento do gráfico ainda continua nas mesmas proporções.
@@ -403,7 +407,7 @@ Observa-se que o achatamento do gráfico ainda continua nas mesmas proporções.
 
 O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
 
-```{r}
+```{r f9, fig.cap="Resíduos do Modelo com muitas exclusões"}
 rstudent(ffit12)|>
 Resid("Resíduos do Modelo 1", df2)
 ```
@@ -413,6 +417,10 @@ Para os resíduos, os pontos continuam dentro dos limites desenvolvidos.
 E por último o envelope simulado, que fornece um vislumbre se a distribuição é adequada para o ajuste
 ```{r, results = F, fig.show='hide'}
 g2 <- hnp::hnp(ffit12, resid.type="deviance", halfnormal = F)
+```
+
+
+```{r f10, fig.cap="Envelope Simulado do Modelo com muitas exclusões"}
 g2 |>
   geom_hnp()
 ```
@@ -420,7 +428,7 @@ A melhora comparado ao envelope simulado do modelo principal e ao envelope simul
 
 ## Testes
 Verificando a significância das covariáveis para os modelos com remoções de pontos influentes
-```{r}
+```{r tt1}
 ffit1 = df_work1 %>% 
   extract_workflow("si_logistic") %>% 
   fit(data = df1)
@@ -428,7 +436,10 @@ ffit1 %>%
   extract_fit_parsnip() %>% 
   tidy() %>% 
   mypdf1::pdf1_tbl('Estatísticas do Modelo com poucas remoções')
+```
 
+
+```{r tt2}
 ffit12 = df_work12 %>% 
   extract_workflow("si_logistic") %>% 
   fit(data = df2)
@@ -443,7 +454,7 @@ Então, continua-se com todas as covariáveis significativas para o modelo, as p
 
 ## Critério de seleção de modelos
 Avaliando quanto aos critérios de seleção, temos:
-```{r}
+```{r tt3}
 glance(ffit1) %>% add_row(glance(ffit12)) %>% 
   mypdf1::pdf1_tbl('Critérios de Seleção do Modelo para a Regressão Logistica')
 ```
