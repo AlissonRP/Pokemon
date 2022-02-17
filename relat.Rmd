@@ -474,7 +474,7 @@ Com a Figura \@ref(fig:d3) percebe-se que as observações que podem ser conside
 ### Resíduos
 
 
-A análise específica de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, então utilizando o resíduo deviance as suas ocorrências na Figura \@ref(fig:d4).
+A análise específica de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, então utilizando o resíduo deviance as suas ocorrências podem ser observadas na Figura \@ref(fig:d4).
 
 ```{r d4, fig.cap="Resíduos Deviance do Modelo 1"}
 residuals(fit1,type="deviance")|>
