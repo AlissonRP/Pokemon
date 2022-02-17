@@ -22,15 +22,13 @@ link-citations: true
 
 
 
-```{r setup,include=F}
 
+```{r setup,include=F}
 options(digits=3)  #Arrendodamento
 options(scipen=999)
-
 ggplot2::theme_set(ggplot2::theme_minimal()) #Tema dos gráficos produzidos no ggplot2
 knitr::opts_chunk$set(echo=F,message=F,warning=F,fig.pos = 'H',fig.align = 'center',fig.width=7.8, fig.height=3.85)
 #scale_fill_discrete = \(...) ggplot2::scale_fill_brewer(... , palette="Set1") #Fixa a scale do fill dos gráficos do ggplot2
-
 d=function(df,v1,v2,px){
   df %>% 
     ggplot(aes({{v1}},{{v2}})) +
@@ -83,13 +81,6 @@ alavanca <- function(fit,df){
 }
 ```
 
-
-
-
-
-
-
-
 # Introdução
 
 Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?    
@@ -99,43 +90,23 @@ A palavra pokémon é a contração de duas palavras em inglês: pocket, que sig
 
 
 ```{r}
-
 #citar pokemonfandom
 library(tidyverse)
 library(tidymodels)
 library(themis)
 library(patchwork)
 #https://www.datanovia.com/en/blog/easy-way-to-expand-color-palettes-in-r/
-
+nome <- read.delim("pokemonname.txt")
 df = read_csv('https://raw.githubusercontent.com/AlissonRP/MLG-trab/main/Pokemon.csv') |> 
   select(-`#`, -Name, -Total) |> 
   mutate(Legendary = factor(ifelse(Legendary == T, 1, 0)),
          Generation = factor(Generation), `Type 1` = factor(`Type 1`, unique(`Type 1`) ))
          #Fiz esse ajuste para melhorar os gráfios para tornar ele mais compartivo, visto que de um lado a ordem dos tipos tá de um jeito, do outro lado tá de outro
 df$Legendary = factor(df$Legendary, levels = c(1,0))
-
 #cols = length(levels(factor(df$`Type 1`)))
 #mycolors  = grDevices::colorRampPalette(brewer.pal(8, "Set3"))(cols)
 #scale_fill_discrete = \(...) mycolors
-
 ```
-```{r}
-graph<-function(df,l , v){
-  df %>% 
-    as_tibble() %>% 
-      ggplot(aes(as.numeric(row.names(df  %>% as_tibble())),value, color = {{v}}))+
-      geom_point()+
-      geom_hline(yintercept=l, linetype="dashed", color = "red")+
-      geom_hline(yintercept=-l, linetype="dashed", color = "red")+
-      labs(x="Índice")
-    
-}
-
-
-
-
-```
-
 
 # Análise Descritiva
 Cada Pokémon tem seus próprios atributos, como HP (Vida), Attack (Ataque), Defense (Defesa), Speed (Velocidade) e outros mais especificos como:  
@@ -168,7 +139,13 @@ mean_leg |>
 
 
 ```
-Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.  
+Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.  Para conjecturar a cerca dos atributos dos pokémon, podemos averiguar os valores pormenorizados na Tabela \@ref(tab:summary).
+
+```{r summary}
+df |>
+  mypdf1::pdf1_summary() |> rename(média = mean, mediana = median, `desvio padrão` = sd)|> mypdf1::pdf1_tbl("Medidas para resumir as variáveis númericas")
+```
+Na Tabela \@ref(tab:summary) tem-se medidas para a média, mediana, desvio padrão, mínimo e máximo, as medidas para média e mediana são consideralvemente próximas, em torno de 70, com apenas a variável Attack com média `r mean(df$Attack)`. Conjecturando sobre o desvio padrão é plausível afirmar que que as médias para o Attack e Sp. Atk são as menos informativas, dado que, as amplitudes são menores que HP, Defense e Sp. Def, são os atributos que possuem maior desvio padrão. No atributo HP tem-se uma conjuntura peculiar, o fato de seu mínimo ser `r min(df$HP)`, o que dá-se pelo pokémon Shedinja, quem tem um conjunto de habilidades especiais, que pode ser lido [\textcolor{blue}{"aqui"}](https://www.einerd.com.br/quem-e-shedinja-o-misterioso-pokemon-que-e-quase-invencivel/).
 
 
 ### Tipos e classificação
@@ -440,8 +417,11 @@ Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilida
 
 # Análise Inferencial
 
+Nessa seção verificaremos uma etapa importante na análise de um ajuste de um modelo de regressão, a análise inferencial, em que buscar encontrar possíveis distorções das suposições do modelo, principalmente deturpações no componente aleatório e observações discrepantes, juntamente com análise de resíduos, adequação da distribuição proposta, assim então validando o modelo. Ademais a análise inferencial também se ocupará de testes de hipóteses, apresentação, seleção do modelo e verificação das variáveis que mais influenciam a predição sendo negativa ou positivamente, determinando se a perspectiva tem sentido prático.  
+
 ## Análise de Dignóstico
-Vamos nessa seção avaliar a existência de pontos influentes no modelo de Regressão logística
+Percebe-se que a análise e detecção de pontos influentes é um tópico relevante para a avaliação e validação de um modelo assim, nessa seção iremos avaliar a existência de observações atípicas, isto é, pontos que exercem peso desproporcional nas estimativas do modelo de Regressão Logística, por isso sucederemos com análise de pontos de avalanca, distância de cook, dffits e envelope simulado.
+
 
 ```{r}
 fit1 = df_work %>% 
@@ -451,7 +431,15 @@ fit1 = df_work %>%
 ```
 
 
-`
+### Alavancagem
+Nessa seção veremos as medidas de alavancagem, que informam se uma observação é discrepante em termos de covariável, ou seja, utilizando os resíduos busca medir a discrepância entre o valor observado e o valor ajustado, então na Figura \@ref(fig:d1), temos os valores da medida de alavancagem para cada observação.
+
+```{r d1, fig.cap="Medidas de Alavancagem para o Modelo 1"}
+alavanca(fit1,df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
+```
+
+Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 `r nome[262,1]`, devido ao fato que este pokémon é o que mais achata a Figura.
+
 
 
 ### Distância de cook
