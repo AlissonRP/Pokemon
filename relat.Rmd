@@ -685,6 +685,7 @@ Com isso, já conseguimos verificar a influência de cada variável na chance de
 
 
 Consoante com as Tabelas \@ref(tab:summary) e \@ref(tab:sum1), percebemos que a influência dos preditores tem fundamento concreto, em virtude das similaridades das médias e medianas dos atributos, ficando em níveis semelhantes e assim como na Tabela \@ref(tab:sum1), o atributo que se destaca é principalmente o Attack e tem-se uma similaridade com a influência das covariáveis no modelo de Random Forest, dado pela Figura \@ref(fig:vip), onde o status de Sp. Attack é que se sobresãe. 
+
 # Referências {-}
 
 
