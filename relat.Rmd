@@ -79,6 +79,15 @@ alavanca <- function(fit,df){
   graph(3*h_bar,df)+
   labs(title="Alavancagem",y="Medida de Alavancagem")
 }
+geom_hnp <- function(old_hnp){
+  G1 <- with(old_hnp, data.frame(x, lower, upper, median, residuals))
+  G1 %>%
+  ggplot(aes(x)) +
+  geom_point(aes(y = residuals)) +
+  geom_line(aes(y = lower)) +
+  geom_line(aes(y = upper)) +
+  geom_line(aes(y = median), linetype = "dashed")
+}
 ```
 
 # Introdução
@@ -86,7 +95,7 @@ alavanca <- function(fit,df){
 Há mais de 20 anos, crianças do mundo inteiro vêm descobrindo o mundo encantado de Pokémon e muitas delas se tornam fãs para a vida toda. Hoje, a família de produtos Pokémon inclui videogames, o jogo de cartas Pokémon Estampas Ilustradas, uma série de animação, filmes, brinquedos, livros e muito mais, mas afinal que são Pokémons?    
 Pokémons são criaturas fictícias que pertencem ao universo da série de mesmo nome - Pokémon, são semelhantes a animais do mundo real, podendo viver em bandos ou individualmente, mas também podem ser inspirados em objetos inanimados como velas, sorvetes, chaveiro e outros instrumentos.  Originalmente, a série foi criada como um jogo de videogame e, com a sua popularização, se espalhou para diversos outros formatos, como séries de TV, filmes e livros.
 
-A palavra pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um pokémon é um "monstro de bolso", na tradução literal, além de ser uma contração esse seria o nome original da série, devido ao lugar onde os Pokémons são armazenados:  as pokébolas, uma espécie de bola pequena para pode-los transportar com mais facilidade, sendo essas basicamente suas casas. Assim as criaturas poderiam descansar após suas batalhas, sendo essa sua principal função explorada no universo Pokémon, em que os monstrinhos lutam de acordo com habilidades da sua tipagem (Fogo, Água, Planta, Pedra, Elétrico, Voador, Lutador, Psíquico, Fantasma, entre outros.).  
+A palavra Pokémon é a contração de duas palavras em inglês: pocket, que significa bolso; e monster, que significa monstro. Assim, um Pokémon é um "monstro de bolso", na tradução literal, além de ser uma contração esse seria o nome original da série, devido ao lugar onde os Pokémons são armazenados:  as pokébolas, uma espécie de bola pequena para pode-los transportar com mais facilidade, sendo essas basicamente suas casas. Assim as criaturas poderiam descansar após suas batalhas, sendo essa sua principal função explorada no universo Pokémon, em que os monstrinhos lutam de acordo com habilidades da sua tipagem (Fogo, Água, Planta, Pedra, Elétrico, Voador, Lutador, Psíquico, Fantasma, entre outros.).  
 
 
 ```{r}
@@ -139,13 +148,13 @@ mean_leg |>
 
 
 ```
-Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.  Para conjecturar a cerca dos atributos dos pokémon, podemos averiguar os valores pormenorizados na Tabela \@ref(tab:summary).
+Assim, como esperado os pokémom lendários possuem atributos superiores (na média) do que os não lendários, note que a força do ataque especial dos Pokémon lendários é `r round(mean_leg[2,5] / mean_leg[1,5],2)` vezes maior que os não lendários.  Para conjecturar a cerca dos atributos dos Pokémon, podemos averiguar os valores pormenorizados na Tabela \@ref(tab:summary).
 
 ```{r summary}
 df |>
   mypdf1::pdf1_summary() |> rename(média = mean, mediana = median, `desvio padrão` = sd)|> mypdf1::pdf1_tbl("Medidas para resumir as variáveis númericas")
 ```
-Na Tabela \@ref(tab:summary) tem-se medidas para a média, mediana, desvio padrão, mínimo e máximo, as medidas para média e mediana são consideralvemente próximas, em torno de 70, com apenas a variável Attack com média `r mean(df$Attack)`. Conjecturando sobre o desvio padrão é plausível afirmar que que as médias para o Attack e Sp. Atk são as menos informativas, dado que, as amplitudes são menores que HP, Defense e Sp. Def, são os atributos que possuem maior desvio padrão. No atributo HP tem-se uma conjuntura peculiar, o fato de seu mínimo ser `r min(df$HP)`, o que dá-se pelo pokémon Shedinja, quem tem um conjunto de habilidades especiais, que pode ser lido [\textcolor{blue}{"aqui"}](https://www.einerd.com.br/quem-e-shedinja-o-misterioso-pokemon-que-e-quase-invencivel/).
+Na Tabela \@ref(tab:summary) tem-se medidas para a média, mediana, desvio padrão, mínimo e máximo, as medidas para média e mediana são consideralvemente próximas, em torno de 70, com apenas a variável Attack com média `r mean(df$Attack)`. Conjecturando sobre o desvio padrão é plausível afirmar que que as médias para o Attack e Sp. Atk são as menos informativas, dado que, as amplitudes são menores que HP, Defense e Sp. Def, são os atributos que possuem maior desvio padrão. No atributo HP tem-se uma conjuntura peculiar, o fato de seu mínimo ser `r min(df$HP)`, o que dá-se pelo Pokémon Shedinja, quem tem um conjunto de habilidades especiais, que pode ser lido [\textcolor{blue}{aqui}](https://www.einerd.com.br/quem-e-shedinja-o-misterioso-pokemon-que-e-quase-invencivel/).
 
 
 ### Tipos e classificação
@@ -170,7 +179,7 @@ df_dec |>
   labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none") 
 
 ```
-Com a Figura \@ref(fig:ref) nota-se  nos Pokémons não lendários que  os tipos que se destacam numericamente são Water (água) e Normal, enquanto para os pokémons lendários se destacam  Psychic (psíquico) e Dragon (dragão). Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos pokémons.
+Com a Figura \@ref(fig:ref) nota-se  nos Pokémons não lendários que  os tipos que se destacam numericamente são Water (água) e Normal, enquanto para os Pokémons lendários se destacam  Psychic (psíquico) e Dragon (dragão). Com a Figura \@ref(fig:tipo2) podemos ver a quantidade dos tipos secundários dos Pokémons.
 
 ```{r tipo2, fig.cap = "Frequência de Pokémons Lendários e Não Lendários pelo Tipo secundário"}
 df_dec |> 
@@ -190,41 +199,41 @@ df_dec |>
   labs(y="Frequência para os Pokémons Lendários") + plot_layout(guides = "collect") & theme(legend.position = "none")  
 
 ```
-Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo Flying (voador), que se destaca para os Pokémons lendários. Para os okémons lendários também se salientas os tipos dragão,  Fighting (lutador) e psíquico, enquanto que para os pokémons não lendários temos os tipos  Poison (venenoso), Ground (terrestre) e psíquico no top 5 de mais recorrentes.
+Identifica-se pela Figura \@ref(fig:tipo2), que em ambas as classificações os Pokémons sem tipo secundários são a classificação majoritária, seguido pelo tipo Flying (voador), que se destaca para os Pokémons lendários. Para os okémons lendários também se salientas os tipos dragão,  Fighting (lutador) e psíquico, enquanto que para os Pokémons não lendários temos os tipos  Poison (venenoso), Ground (terrestre) e psíquico no top 5 de mais recorrentes.
 
 
 
 ### Lançamento por gerações
-Nessa subseção iremos analisar a quantidade de Pokémons  em cada geração e comparar com o desenvolvimento de novos pokémons lendários, começaremos analisando a frequência de pokémons por geração na Figura \@ref(fig:g1).
+Nessa subseção iremos analisar a quantidade de Pokémons  em cada geração e comparar com o desenvolvimento de novos Pokémons lendários, começaremos analisando a frequência de Pokémons por geração na Figura \@ref(fig:g1).
 ```{r g1, fig.cap = "Frequência lançados por geração"}
 df_dec |> 
   group_by(Generation) |> 
   count() |> 
   ggplot(aes(Generation, n, fill = Generation)) +
-  geom_bar(stat = 'identity')+ labs(y="Quantidade de  pokémons") + theme(legend.position = "none")+
+  geom_bar(stat = 'identity')+ labs(y="Quantidade de  Pokémons") + theme(legend.position = "none")+
   geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
 ```
 
-Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
+Com a Figura \@ref(fig:g1), podemos notar uma "sazonalidade" para o desenvolvimento de Pokémons, visto que as gerações ímpares se sobresãem em número com todas com pelo menos 160 Pokémons novos e para as gerações pares tem-se uma queda notável, com um mínimo 82 novos Pokémons na geração 6 e um máximo de 121 na geração 5. A primeira geração ainda é imbatível com a quantidade de lançamentos de Pokémons, 166, no entanto, ganha por apenas 1 da quinta geração. Para o desenvolvimento de Pokémons lendários podemos ver a representação com a Figura \@ref(fig:g2).
 
-```{r g2, fig.cap = "Frequência de novos pokémons lendários por geração"}
+```{r g2, fig.cap = "Frequência de novos Pokémons lendários por geração"}
 df_dec |> 
   filter(Legendary == "Sim") |> 
   group_by(Generation) |> 
   count() |> 
   ggplot(aes(Generation, n, fill = Generation)) +
   geom_bar(stat = 'identity')+
-  labs(y="Quantidade de  pokémons") + theme(legend.position = "none") +
+  labs(y="Quantidade de  Pokémons") + theme(legend.position = "none") +
   geom_text(aes(label=n), position=position_dodge(width=0.9), vjust=-0.25)
 ```
 
 
-Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do [\textcolor{blue}{"Trio de Aves Lendárias"}](https://pt.wikipedia.org/wiki/Articuno,_Zapdos_e_Moltres) e [\textcolor{blue}{"Trio de Cães Lendários"}](https://poke-storn.blogspot.com/2015/02/os-caes-lendarios-legendary-beasts.html), enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
+Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta gerações se evidenciam, com a criação de Pokémons lendários, o fato deve-se que nas primeiras gerações os lendários estavam em torno do [\textcolor{blue}{"Trio de Aves Lendárias"}](https://pt.wikipedia.org/wiki/Articuno,_Zapdos_e_Moltres) e [\textcolor{blue}{"Trio de Cães Lendários"}](https://poke-storn.blogspot.com/2015/02/os-caes-lendarios-legendary-beasts.html), enquanto que nas próxima gerações foi se desenvolvendo e explicando a criação e manutenção do Universo Pokémon por suas espécies lendárias.
 
 
 # Análise Preditiva
 
-Vamos aqui utilizar como variável de desfecho a classificação do pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
+Vamos aqui utilizar como variável de desfecho a classificação do Pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de Pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
 
 ```{r model}
 set.seed(42)
@@ -438,49 +447,56 @@ Nessa seção veremos as medidas de alavancagem, que informam se uma observaçã
 alavanca(fit1,df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
-Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 (`r nome[262,1]`), devido ao fato que este pokémon é o que mais achata a Figura, mas também temos outras observações acima do limite da medida de alavancagem estipulado.
+Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 (`r nome[262,1]`), devido ao fato que este Pokémon é o que mais achata a Figura, mas também temos outras observações acima do limite da medida de alavancagem estipulado.
 
 
 
 ### Distância de Cook
 Outra medida interessante para ponto aberrantes é a Distância de Cook ($D_i$), que mede essencialmente a influência das observações sobre os parâmetros e o ajuste, avaliando a influência de o que pequenas pertubarções nas variâncias das observações causam nas estimativas dos parâmetros. Ou de forma simplificada, temos a influência da observação $i$ sobre todos os $n$ valores ajustados, 
 
-```{r}
+```{r d2, fig.cap="Distância de Cook para o Modelo 1"}
 cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
+Com a Figura \@ref(fig:d2), tem-se que as observações que possuem maior valores da distância de cook são: 72,262,414,415,416 e 430 (`r paste(nome[c(72,262,414,415,416,430),1], sep=' ')`, respectivamente), devido ao fato que estes Pokémons são os que estão mais distantes do intevalo definido, no entanto também existências outras observações fora do limite.
 
-### Dffits
-No diagnóstico dffits, que informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, percebe-se que:
 
-```{r}
-#dffts(fit1, "Dffits do Modelo 1", df)+ ggrepel::geom_text_repel(aes(label=1:800), size=2.8, point.padding = 0.3)
+### DFFITS
+
+A medida DFFITS ($DFFITS_i$) pode ser considerada uma medida complementar ou concorrente a distância de Cook, tendo o próposito de medir a influência das observações nos parâmetros de posição e escala (mas não simultaneamente), assim informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, tem-se que:
+
+
+```{r d3, fig.cap="DFFITS do Modelo 1"}
+dffts(fit1, "DFFITS do Modelo 1", df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
+Com a Figura \@ref(fig:d3) percebe-se que as observações que podem ser consideradas pontos influentes de acordo com o DFFITS são: 262, 415, 416, 429 e 430, `r paste(nome[c(262,415,416,429,430),1],  sep=' ')`, respectivamente), visto que são os indíviduos que mais distorcem a Figura \@ref(fig:d3).
 
-O gráfico de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, no gráfico abaixo verificamos que todos os estados estão dentro dos limites: 
+### Resíduos
 
 
+A análise específica de resíduos também é importante para verificarmos visualmente a média dos resíduos e se existe algum valor fora do limite de 3 desvios padrões, pois esses possui baixíssima probabilidade de serem observados, então utilizando o resíduo deviance as suas ocorrências na Figura \@ref(fig:d4).
 
-```{r}
+```{r d4, fig.cap="Resíduos Deviance do Modelo 1"}
 residuals(fit1,type="deviance")|>
 Resid("Resíduos do Modelo 1", df)
 ```
+Com a Figura \@ref(fig:d4) verificamos que todos as ocorrências estão dentro dos limites: 
 
+### Envelope Simulado
 
-E por último o envelope simulado, que fornce um vislumbre se a distribuição é adequada para o ajuste
+Finalizamos a análise de influência com o envolope simulado que permite uma melhor comparação entre os resíduos e os percentis da distribuição, fornecendo um vislumbre se a distribuição é adequada para o ajuste, como percebemos na Figura \@ref(fig:d5).
+
 ```{r, results = F, fig.show='hide'}
 g1 <- hnp::hnp(fit1, resid.type="deviance", halfnormal = F)
-G1 <- with(g1, data.frame(x, lower, upper, median, residuals))
 ```
 
-```{r}
-G1 %>%
-ggplot(aes(x)) +
-  geom_point(aes(y = residuals)) +
-  geom_line(aes(y = lower)) +
-  geom_line(aes(y = upper)) +
-  geom_line(aes(y = median), linetype = "dashed")
+```{r d5, fig.cap="Envelope Simulado dos dados com a Distribuição Binomial"}
+geom_hnp(g1)
 ```
+
+Analisando a Figura \@ref(fig:d5), pode-se identificar que existem pontos fora das bandas simuladas, fornecendo indícios de que existam pontos influentes ou que a distribuição não é adequada para o ajuste.
+
+### Decisão
 
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
 
