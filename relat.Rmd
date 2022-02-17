@@ -458,7 +458,7 @@ Outra medida interessante para ponto aberrantes é a Distância de Cook ($D_i$),
 cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
-Com a Figura \@ref(fig:d2), tem-se que as observações que possuem maior valores da distância de cook são: 72,262,414,415,416 e 430 (`r paste(nome[c(72,262,414,415,416,430),1], sep=' ')`, respectivamente), devido ao fato que estes Pokémons são os que estão mais distantes do intevalo definido, no entanto também existências outras observações fora do limite.
+Com a Figura \@ref(fig:d2), tem-se que as observações que possuem maior valores da distância de cook são: 72, 262, 414, 415, 416 e 430 (sendo os Pokémons conhecidos como: `r paste(nome[c(72,262,414,415,416,430),1], sep=' ')`, respectivamente), devido ao fato que estes Pokémons são os que estão mais distantes do intevalo definido, no entanto também existem outras observações fora dos limites.
 
 
 ### DFFITS
