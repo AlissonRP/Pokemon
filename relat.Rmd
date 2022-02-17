@@ -494,7 +494,7 @@ g1 <- hnp::hnp(fit1, resid.type="deviance", halfnormal = F)
 geom_hnp(g1)
 ```
 
-Analisando a Figura \@ref(fig:d5), pode-se identificar que existem pontos fora das bandas simuladas, fornecendo indícios de que existam pontos influentes ou que a distribuição não é adequada para o ajuste.
+Analisando a Figura \@ref(fig:d5), pode-se identificar que existem  alguns pontos fora das bandas simuladas, fornecendo indícios de que existem pontos influentes ou que talvez  a distribuição não é adequada para o ajuste.
 
 ### Decisão
 
