@@ -225,7 +225,7 @@ Antagônico a Figura \@ref(fig:g1), na Figura \@ref(fig:g2) a terceira e quinta 
 
 # Análise Preditiva
 
-Vamos aqui utilizar como variável de desfecho a classificação do Pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e Xgboost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de Pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
+Vamos aqui utilizar como variável de desfecho a classificação do Pokémon, sendo portanto Lendário ou não, vamos testar a saber 3 modelos para predição: Random Forest, Regressão logística e XGBoost. Como métrica de escolha de modelo vamos utilizar a sensibilidade e não a acurácia como erroneamente muitos fazem, pois como vimos, a proporção de Pokémons não lendários é `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[1]), 2)`, portanto se os modelos predizerem não lendário para todas observações teremos `r round(df |> group_by(Legendary) |> count() |> mutate(prop = n/nrow(df)) |> with(prop[2]), 2)*100`% de acurácia.
 
 ```{r model}
 set.seed(42)
@@ -313,8 +313,9 @@ extract_fit_parsnip() %>%
   labs(y="Importância")
 ```
 
-## Xgboost
-É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados igual em Random Forest, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar xgboost para comparar com os modelos anteriores.
+## XGBoost
+
+É notável que algoritmos de boosting atualmente são o estado da arte para dados estruturados, nele as árvores vão crescendo usando informações das árvores anteriores, isso quer dizer que  não fazemos bootstrap dos dados igual em Random Forest, mas cada árvore trabalha  com uma versão diferente dos dados originais, vamos aqui ajustar XGBoost para comparar com os modelos anteriores.
 
 
 ```{r, include=FALSE}
@@ -357,7 +358,7 @@ xg_cm = fit3 |>
   rename(Predição = .pred_class)
 xg_cm |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
-                         de XgBoost')
+                         de XGBoost')
 ```
 Ao contrário dos modelos anteriores que tiveram 9 predições corretas para lendário,  o XGBoost teve 10.
 
@@ -411,7 +412,7 @@ final_xg = metric('si_xg')
 oh_yeah = vetur(final_log) |> 
   bind_rows(vetur(final_rf)) |> 
   bind_rows(vetur(final_xg)) |> 
-  bind_cols(tibble(Modelo = c('Regressão Logistica','Random Forest','xgboost'))) |> 
+  bind_cols(tibble(Modelo = c('Regressão Logistica','Random Forest','XGBoost'))) |> 
   select(Modelo, everything()) 
 
 oh_yeah |> 
@@ -454,7 +455,7 @@ Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavanc
 Outra medida interessante para ponto aberrantes é a Distância de Cook, que mede essencialmente a influência das observações sobre os parâmetros e o ajuste, avaliando a influência de o que pequenas pertubarções nas variâncias das observações causam nas estimativas dos parâmetros. Ou de forma simplificada, temos a influência da observação $i$ sobre todos os $n$ valores ajustados, 
 
 ```{r d2, fig.cap="Distância de Cook para o Modelo 1"}
-cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
+cook(fit1, "Distância do Modelo de Regressão Logística", df) + ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
 Com a Figura \@ref(fig:d2), tem-se que as observações que possuem maior valores da distância de cook são: 72, 262, 414, 415, 416 e 430 (sendo os Pokémons conhecidos como: `r paste(nome[c(72,262,414,415,416,430),1], sep=' ')`, respectivamente), devido ao fato que estes Pokémons são os que estão mais distantes do intevalo definido, no entanto também existem outras observações fora dos limites.
@@ -466,7 +467,7 @@ A medida DFFITS pode ser considerada uma medida complementar ou concorrente a di
 
 
 ```{r d3, fig.cap="DFFITS do Modelo 1"}
-dffts(fit1, "DFFITS do Modelo 1", df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
+dffts(fit1, "DFFITS do Modelo de Regressão Logística", df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 Com a Figura \@ref(fig:d3) percebe-se que as observações que podem ser consideradas pontos influentes de acordo com o DFFITS são: 262, 415, 416, 429 e 430, (sendo os Pokémons conhecidos como: `r paste(nome[c(262,415,416,429,430),1],  sep=' ')`), visto que são os indíviduos que mais distorcem a Figura \@ref(fig:d3).
 
@@ -477,7 +478,7 @@ A análise específica de resíduos também é importante para verificarmos visu
 
 ```{r d4, fig.cap="Resíduos Deviance do Modelo 1"}
 residuals(fit1,type="deviance")|>
-Resid("Resíduos do Modelo 1", df)
+Resid("Resíduos do Modelo de Regressão Logística", df)
 ```
 Com a Figura \@ref(fig:d4) verificamos que todos as ocorrências estão dentro dos limites.  
 
@@ -498,7 +499,7 @@ Analisando a Figura \@ref(fig:d5), pode-se identificar que existem  alguns ponto
 
 ### Decisão
 
-Tendo em consideração toda a análise de influência e o objetivo da modelagem, decidimos por não remover nenhuma observação possivelmente influente, dado que o modelo está sendo usado para avaliar e prever condições raras na população (Pokémons lendários) e essa condição leva a valores extremos das variáveis preditoras, pois estes Pokémons possuem atributos maiores devidos a sua importância no universo fictício, desde proteger certas regiões, criar tempestades, gelo ou até mesmo o universo, devido a esses fatos eles possuem atributos de maior grau. Dado que, os possíveis pontos influentes em sua maioria são dados por Pokémons lendários e com o decorrer do crescimento do universo Pokémon se desejassemos predizer Pokémons lendários com o modelo proposto nesse trabalho e os status parecidos com os dos pontos aberrantes, o modelo não estaria adequado para essa situação. No entanto, buscamos remover as observações discrepantes até que pudessemos chegar em condições melhores das análises de influência, que podem ser verificadas [\textcolor{blue}{aqui}](https://twitter.com/P0K3TR41N3R).
+Tendo em consideração toda a análise de influência e o objetivo da modelagem, decidimos por não remover nenhuma observação possivelmente influente, dado que o modelo está sendo usado para avaliar e prever condições raras na população (Pokémons lendários) e essa condição leva a valores extremos das variáveis preditoras, pois estes Pokémons possuem atributos maiores devidos a sua importância no universo fictício, desde proteger certas regiões, criar tempestades, gelo ou até mesmo o universo, devido a esses fatos eles possuem atributos de maior grau. Dado que, os possíveis pontos influentes em sua maioria são dados por Pokémons lendários e com o decorrer do crescimento do universo Pokémon se desejassemos predizer Pokémons lendários com o modelo proposto nesse trabalho e os status parecidos com os dos pontos aberrantes, o modelo não estaria adequado para essa situação. No entanto, buscamos remover as observações discrepantes até que pudessemos chegar em condições melhores das análises de influência, que podem ser verificadas [\textcolor{blue}{aqui}](https://github.com/AlissonRP/Pokemon/blob/main/influence.pdf).
 
 ## Testes
 
@@ -547,7 +548,7 @@ $$
 No entanto, podemos realizar algumas manipulações algébricas, para buscar a influência de cada cováriavel na chance dos Pokémons serem preditos como lendários, começaremos com a aplicação do exponencial ($e$):
 $$
 \begin{aligned}
-\frac { P( \operatorname{y} = \operatorname{1} ) }{ 1 - P( \operatorname{y} = \operatorname{1} ) } &= e^{\beta_0 + \beta_{1}(\operatorname{HP}) + \beta_{2}(\operatorname{Attack}) + \beta_{3}(\operatorname{Defense})}\ * \\
+\frac { P( \operatorname{p} = \operatorname{1} ) }{ 1 - P( \operatorname{p} = \operatorname{1} ) } &= e^{\beta_0 + \beta_{1}(\operatorname{HP}) + \beta_{2}(\operatorname{Attack}) + \beta_{3}(\operatorname{Defense})}\ * \\
 &\quad e^{\beta_{4}(\operatorname{Sp.\ Atk}) + \beta_{5}(\operatorname{Sp.\ Def}) + \beta_{6}(\operatorname{Speed})}
 \end{aligned}
 $$
