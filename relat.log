@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2022.2.14)  16 FEB 2022 19:36
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (TeX Live 2021/W32TeX) (preloaded format=pdflatex 2022.2.14)  17 FEB 2022 00:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -722,173 +722,229 @@ File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 
 {c:/Users/user/AppData/Roaming/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex
 .map}]
-<relat_files/figure-latex/ref-1.pdf, id=65, 563.10374pt x 278.03876pt>
+<relat_files/figure-latex/ref-1.pdf, id=68, 563.10374pt x 278.03876pt>
 File: relat_files/figure-latex/ref-1.pdf Graphic file (type pdf)
 <use relat_files/figure-latex/ref-1.pdf>
 Package pdftex.def Info: relat_files/figure-latex/ref-1.pdf  used on input line
- 173.
+ 198.
 (pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
 [2pdfTeX warning (ext4): destination with the same identifier (name{table.1}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.179 
+l.204 
+      pdfTeX warning (ext4): destination with the same identifier (name{table.2
+}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.204 
       ]
-<relat_files/figure-latex/tipo2-1.pdf, id=79, 563.10374pt x 278.03876pt>
+<relat_files/figure-latex/tipo2-1.pdf, id=81, 563.10374pt x 278.03876pt>
 File: relat_files/figure-latex/tipo2-1.pdf Graphic file (type pdf)
 <use relat_files/figure-latex/tipo2-1.pdf>
 Package pdftex.def Info: relat_files/figure-latex/tipo2-1.pdf  used on input li
-ne 184.
+ne 209.
 (pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
 [3pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) 
 has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.192 
-      pdfTeX warning (ext4): destination with the same identifier (name{figure.
-2}) has been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.192 
-       <./relat_files/figure-latex/ref-1.pdf> <./relat_files/figure-latex/tipo2
--1.pdf>]
-<relat_files/figure-latex/g1-1.pdf, id=97, 563.10374pt x 278.03876pt>
+l.215 
+       <./relat_files/figure-latex/ref-1.pdf>]
+<relat_files/figure-latex/g1-1.pdf, id=96, 563.10374pt x 278.03876pt>
 File: relat_files/figure-latex/g1-1.pdf Graphic file (type pdf)
 <use relat_files/figure-latex/g1-1.pdf>
 Package pdftex.def Info: relat_files/figure-latex/g1-1.pdf  used on input line 
-200.
+225.
 (pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
-<relat_files/figure-latex/g2-1.pdf, id=100, 563.10374pt x 278.03876pt>
+[4pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) 
+has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.231 
+       <./relat_files/figure-latex/tipo2-1.pdf>]
+<relat_files/figure-latex/g2-1.pdf, id=111, 563.10374pt x 278.03876pt>
 File: relat_files/figure-latex/g2-1.pdf Graphic file (type pdf)
 <use relat_files/figure-latex/g2-1.pdf>
 Package pdftex.def Info: relat_files/figure-latex/g2-1.pdf  used on input line 
-211.
+236.
 (pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
-[4pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) 
+[5pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) 
 has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.217 
-       <./relat_files/figure-latex/g1-1.pdf>] [5pdfTeX warning (ext4): destinat
-ion with the same identifier (name{figure.4}) has been already used, duplicate 
-ignored
+l.244 
+      pdfTeX warning (ext4): destination with the same identifier (name{figure.
+4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.240 
-       <./relat_files/figure-latex/g2-1.pdf>]
-<relat_files/figure-latex/vip-1.pdf, id=143, 563.10374pt x 278.03876pt>
+l.244 
+       <./relat_files/figure-latex/g1-1.pdf> <./relat_files/figure-latex/g2-1.p
+df>]
+<relat_files/figure-latex/vip-1.pdf, id=134, 563.10374pt x 278.03876pt>
 File: relat_files/figure-latex/vip-1.pdf Graphic file (type pdf)
 <use relat_files/figure-latex/vip-1.pdf>
 Package pdftex.def Info: relat_files/figure-latex/vip-1.pdf  used on input line
- 248.
+ 273.
 (pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
-[6pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) 
-has been already used, duplicate ignored
+[6] [7pdfTeX warning (ext4): destination with the same identifier (name{figure.
+5}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.281 
-       <./relat_files/figure-latex/vip-1.pdf>]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 3
-31.
-(c:/Users/user/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
-File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-)
-Underfull \hbox (badness 10000) in paragraph at lines 333--335
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 335--337
-
- []
-
-<relat_files/figure-latex/unnamed-chunk-12-1.pdf, id=158, 563.10374pt x 278.038
-76pt>
-File: relat_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
-<use relat_files/figure-latex/unnamed-chunk-12-1.pdf>
-Package pdftex.def Info: relat_files/figure-latex/unnamed-chunk-12-1.pdf  used 
-on input line 346.
-(pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
-[7pdfTeX warning (ext4): destination with the same identifier (name{table.2}) h
-as been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.352 
+l.350 
       pdfTeX warning (ext4): destination with the same identifier (name{table.3
 }) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.352 
+l.350 
       pdfTeX warning (ext4): destination with the same identifier (name{table.4
 }) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.352 
-      ]
-<relat_files/figure-latex/unnamed-chunk-18-1.pdf, id=169, 563.10374pt x 278.038
+l.350 
+       <./relat_files/figure-latex/vip-1.pdf>]
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 3
+56.
+(c:/Users/user/AppData/Roaming/TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
+File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
+)
+Underfull \hbox (badness 10000) in paragraph at lines 358--360
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 360--362
+
+ []
+
+<relat_files/figure-latex/unnamed-chunk-11-1.pdf, id=169, 563.10374pt x 278.038
 76pt>
-File: relat_files/figure-latex/unnamed-chunk-18-1.pdf Graphic file (type pdf)
-<use relat_files/figure-latex/unnamed-chunk-18-1.pdf>
-Package pdftex.def Info: relat_files/figure-latex/unnamed-chunk-18-1.pdf  used 
-on input line 398.
+File: relat_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
+<use relat_files/figure-latex/unnamed-chunk-11-1.pdf>
+Package pdftex.def Info: relat_files/figure-latex/unnamed-chunk-11-1.pdf  used 
+on input line 371.
 (pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
-[8pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) 
-has been already used, duplicate ignored
+[8pdfTeX warning (ext4): destination with the same identifier (name{table.5}) h
+as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.398 ...re-latex/unnamed-chunk-18-1} \end{center}
-                                                  pdfTeX warning (ext4): destin
-ation with the same identifier (name{table.5}) has been already used, duplicate
- ignored
+l.396 
+      pdfTeX warning (ext4): destination with the same identifier (name{figure.
+6}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.398 ...re-latex/unnamed-chunk-18-1} \end{center}
-                                                   <./relat_files/figure-latex/
-unnamed-chunk-12-1.pdf>]
+l.396 
+       <./relat_files/figure-latex/unnamed-chunk-11-1.pdf>]
+<relat_files/figure-latex/d1-1.pdf, id=184, 563.10374pt x 278.03876pt>
+File: relat_files/figure-latex/d1-1.pdf Graphic file (type pdf)
+<use relat_files/figure-latex/d1-1.pdf>
+Package pdftex.def Info: relat_files/figure-latex/d1-1.pdf  used on input line 
+416.
+(pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
+[9pdfTeX warning (ext4): destination with the same identifier (name{table.6}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.422 
+      ]
+<relat_files/figure-latex/d2-1.pdf, id=196, 563.10374pt x 278.03876pt>
+File: relat_files/figure-latex/d2-1.pdf Graphic file (type pdf)
+<use relat_files/figure-latex/d2-1.pdf>
+Package pdftex.def Info: relat_files/figure-latex/d2-1.pdf  used on input line 
+432.
+(pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
+[10pdfTeX warning (ext4): destination with the same identifier (name{figure.7})
+ has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.438 
+       <./relat_files/figure-latex/d1-1.pdf>]
+<relat_files/figure-latex/d3-1.pdf, id=209, 563.10374pt x 278.03876pt>
+File: relat_files/figure-latex/d3-1.pdf Graphic file (type pdf)
+<use relat_files/figure-latex/d3-1.pdf>
+Package pdftex.def Info: relat_files/figure-latex/d3-1.pdf  used on input line 
+448.
+(pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
+[11pdfTeX warning (ext4): destination with the same identifier (name{figure.8})
+ has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.454 
+       <./relat_files/figure-latex/d2-1.pdf>]
+<relat_files/figure-latex/d4-1.pdf, id=225, 563.10374pt x 278.03876pt>
+File: relat_files/figure-latex/d4-1.pdf Graphic file (type pdf)
+<use relat_files/figure-latex/d4-1.pdf>
+Package pdftex.def Info: relat_files/figure-latex/d4-1.pdf  used on input line 
+464.
+(pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
+[12pdfTeX warning (ext4): destination with the same identifier (name{figure.9})
+ has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.470 
+       <./relat_files/figure-latex/d3-1.pdf>]
+<relat_files/figure-latex/d5-1.pdf, id=241, 563.10374pt x 278.03876pt>
+File: relat_files/figure-latex/d5-1.pdf Graphic file (type pdf)
+<use relat_files/figure-latex/d5-1.pdf>
+Package pdftex.def Info: relat_files/figure-latex/d5-1.pdf  used on input line 
+480.
+(pdftex.def)             Requested size: 517.58916pt x 255.56541pt.
+[13pdfTeX warning (ext4): destination with the same identifier (name{figure.10}
+) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.486 
+       <./relat_files/figure-latex/d4-1.pdf>]
 
-LaTeX Warning: Reference `fig:crfgraph' on page 9 undefined on input line 400.
+LaTeX Warning: Reference `fig:crfgraph' on page 14 undefined on input line 492.
 
 
-Overfull \hbox (2.22221pt too wide) in paragraph at lines 408--411
+
+Overfull \hbox (2.22221pt too wide) in paragraph at lines 500--503
 [] []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 408--411
+Underfull \hbox (badness 10000) in paragraph at lines 500--503
 
  []
 
 
-Overfull \hbox (2.22221pt too wide) in paragraph at lines 412--415
+Overfull \hbox (2.22221pt too wide) in paragraph at lines 504--507
 [][] []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 412--415
+Underfull \hbox (badness 10000) in paragraph at lines 504--507
 
  []
 
 
-Overfull \hbox (2.22221pt too wide) in paragraph at lines 416--419
+Overfull \hbox (2.22221pt too wide) in paragraph at lines 508--511
 [][] []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 416--419
+Underfull \hbox (badness 10000) in paragraph at lines 508--511
 
  []
 
 
-Overfull \hbox (2.22221pt too wide) in paragraph at lines 420--423
+Overfull \hbox (2.22221pt too wide) in paragraph at lines 512--515
 [][] []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 420--423
+Underfull \hbox (badness 10000) in paragraph at lines 512--515
 
  []
 
-[9 <./relat_files/figure-latex/unnamed-chunk-18-1.pdf>] (./relat.aux)
+[14pdfTeX warning (ext4): destination with the same identifier (name{figure.11}
+) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.518 \end{document}
+                     <./relat_files/figure-latex/d5-1.pdf>] (./relat.aux)
 
 LaTeX Warning: There were undefined references.
 
@@ -896,13 +952,13 @@ Package rerunfilecheck Info: File `relat.out' has not changed.
 (rerunfilecheck)             Checksum: F46AB22A194EDEDB96D15669A908CCD1;1170.
  ) 
 Here is how much of TeX's memory you used:
- 13923 strings out of 480238
- 222595 string characters out of 5894353
- 529009 words of memory out of 5000000
- 31529 multiletter control sequences out of 15000+600000
+ 13988 strings out of 480238
+ 224111 string characters out of 5894353
+ 532572 words of memory out of 5000000
+ 31571 multiletter control sequences out of 15000+600000
  554871 words of font info for 93 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 60i,9n,63p,762b,419s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 60i,9n,63p,807b,417s stack positions out of 5000i,500n,10000p,200000b,80000s
 {c:/Users/user/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.en
 c}{c:/Users/user/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.en
 c}{c:/Users/user/AppData/Roaming/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathi
@@ -925,10 +981,10 @@ g/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb><c:/Users/user/AppData/Roam
 ing/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb><c:/Users/user/AppData/Ro
 aming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb><c:/Users/user/AppDat
 a/Roaming/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
-Output written on relat.pdf (9 pages, 404618 bytes).
+Output written on relat.pdf (14 pages, 599701 bytes).
 PDF statistics:
- 298 PDF objects out of 1000 (max. 8388607)
- 237 compressed objects within 3 object streams
- 57 named destinations out of 1000 (max. 500000)
- 108 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 373 PDF objects out of 1000 (max. 8388607)
+ 299 compressed objects within 3 object streams
+ 76 named destinations out of 1000 (max. 500000)
+ 128 words of extra memory for PDF output out of 10000 (max. 10000000)
 
