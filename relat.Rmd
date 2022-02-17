@@ -498,47 +498,47 @@ show_best(tune_results, metric = "spec") #[3,]
 
 
 ```{r}
-tuned_best <- select_best(tune_results, metric = "spec") #[3,]
-fin_wflw <- tune_work  %>%
+tuned_best <- select_best(tune_results, metric = "sens") #[3,]
+fin_fit4 <- tune_work  %>%
     finalize_workflow(parameters = tuned_best)
 
-wflw_fit <- fin_wflw %>%
+fit4 <- fin_fit %>%
     fit(df_train)
 
 
 
-wflw_fit |> 
+fi4 |> 
   predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
-                         de Regressão logística')
+                         de XGBoost tunnado')
 ```
 
 
 ```{r}
-tuned_best_rf <- select_best(tune_results_rf, metric = "spec") 
-fin_wflw_rf <- tune_work_rf  %>%
+tuned_best_rf <- select_best(tune_results_rf, metric = "sens") 
+fin_fit5 <- tune_work_rf  %>%
     finalize_workflow(parameters = tuned_best_rf)
-wflw_fit_rf <- fin_wflw_rf %>%
+fit5 <- fin_fit5 %>%
     fit(df_train)
 
-wflw_fit_rf |> 
+fit5 |> 
   predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
-                         de Regressão logística')
+                         de Random Forest Tunnado')
 
 ```
 
 
 ```{r}
-tuned_best_glm <- select_best(tune_results_glm, metric = "roc_auc") 
-fin_wflw_glm <- tune_work_glm  %>%
+tuned_best_glm <- select_best(tune_results_glm, metric = "sens") 
+fin_fit6 <- tune_work_glm  %>%
     finalize_workflow(parameters = tuned_best_glm)
-wflw_fit_glm <- fin_wflw_glm %>%
+fit6 <- fin_fit6 %>%
     fit(df_train)
 
-wflw_fit_glm |> 
+fit6 |> 
   predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
   rename(Predição = .pred_class) |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
