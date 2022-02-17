@@ -327,33 +327,40 @@ fit3 = df_tuner %>%
 Uma medida interessante é a matriz de confusão que pode ser vista como uma tabela que possui os valores reais cruzados com os valores preditos, vejamos para os 3 modelos ajustados como a matriz de confusão fica para os dados de teste:
 
 ```{r}
-fit1 |> 
+logit_cm = fit1 |> 
   predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
-  rename(Predição = .pred_class) |> 
+  rename(Predição = .pred_class) 
+
+logit_cm |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
                          de Regressão logística')
 ```
-comentários
+Pode-se ver que em regressão logistica, que de 10 predições para lendário 9 foram corretas, porém para os 18 casos que eram lendários somente 50% foi corretamente classificado.
 
 
 
 ```{r}
-fit2 |> 
+rf_cm = fit2 |> 
   predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
-  rename(Predição = .pred_class) |> 
+  rename(Predição = .pred_class) 
+rf_cm |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
                          de Random Forest')
 ```
-comentários
+
+Em Random Forest nota-se  que de 11 predições para lendário 9 foram corretas, porém assim como para a regressão logística 50% dos Pokémon lendários foram incorretamente classicados.
 
 
 ```{r}
-fit3 |> 
+xg_cm = fit3 |> 
   predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
-  rename(Predição = .pred_class) |> 
+  rename(Predição = .pred_class)
+xg_cm |> 
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
                          de XgBoost')
 ```
+Ao contrário dos modelos anteriores que tiveram 9 predições para lendário, Xgboost teve 10, porém foram um total de 12 predições para lendário.
+
 Da matriz de confusão podemos derivar as seguintes métricas:  
 
 * Valor predito positivo (`ppv`): Que é definido como sendo a proporção de predições positivas que foram corretamentes previstas 
@@ -414,137 +421,6 @@ oh_yeah |>
 ```
 Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilidade é `r oh_yeah |> filter(sens == max(sens)) |> select(Modelo)`
 
-## Tunnando os modelos
-
-
-```{r}
-df_boost <- boost_tree(trees = 1000,
-                        tree_depth = tune(),
-                        min_n = tune(),
-                        learn_rate = tune(),
-                        sample_size = tune(),
-                        mtry = tune(),
-                        loss_reduction = tune()
-                       ) |>
-  set_engine('xgboost') |> 
-  set_mode("classification")
-
-df_boost_glm <- logistic_reg(penalty = tune(), mixture = 1) %>% 
-  set_engine("glmnet")
-
-df_boost_rf = rand_forest(mode = 'classification', 
-                          trees = 1000,
-                          mtry = tune(),
-                          min_n = tune()) |> 
-  set_engine('ranger', importance = "impurity")
-
-xgb_grid <- grid_latin_hypercube(
-  tree_depth(),
-  min_n(),
-  loss_reduction(),
-  sample_size = sample_prop(),
-  finalize(mtry(), df_train),
-  learn_rate(),
-  size = 30
-)
-```
-
-
-```{r}
-#XGBoost
-tune_work <- workflow() %>%
-    add_model(df_boost) %>%
-    add_recipe(df_rec1)
-tune_results <- tune_grid(
-    object     = tune_work,
-    resamples  = df_vf,
-    param_info = parameters(tune_work),
-    grid       = xgb_grid,#15
-    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
-    control    = control_grid(save_pred = TRUE)
-)
-
-#RF
-
-tune_work_rf <- workflow() %>%
-    add_model(df_boost_rf) %>%
-    add_recipe(df_rec1)
-tune_results_rf <- tune_grid(
-    object     = tune_work_rf,
-    resamples  = df_vf,
-    param_info = parameters(tune_work_rf),
-    grid       = 15, 
-    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
-    control    = control_grid(save_pred = TRUE)
-)
-
-#GLM
-
-tune_work_glm <- workflow() %>%
-    add_model(df_boost_glm) %>%
-    add_recipe(df_rec1)
-tune_results_glm <- tune_grid(
-    object     = tune_work_glm,
-    resamples  = df_vf,
-    param_info = parameters(tune_work_glm),
-    grid       = 15, 
-    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
-    control    = control_grid(save_pred = TRUE)
-)
-
-collect_metrics(tune_results)
-show_best(tune_results, metric = "spec") #[3,]
-```
-
-
-```{r}
-tuned_best <- select_best(tune_results, metric = "sens") #[3,]
-fin_fit4 <- tune_work  %>%
-    finalize_workflow(parameters = tuned_best)
-
-fit4 <- fin_fit %>%
-    fit(df_train)
-
-
-
-fi4 |> 
-  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
-  rename(Predição = .pred_class) |> 
-  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
-                         de XGBoost tunnado')
-```
-
-
-```{r}
-tuned_best_rf <- select_best(tune_results_rf, metric = "sens") 
-fin_fit5 <- tune_work_rf  %>%
-    finalize_workflow(parameters = tuned_best_rf)
-fit5 <- fin_fit5 %>%
-    fit(df_train)
-
-fit5 |> 
-  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
-  rename(Predição = .pred_class) |> 
-  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
-                         de Random Forest Tunnado')
-
-```
-
-
-```{r}
-tuned_best_glm <- select_best(tune_results_glm, metric = "sens") 
-fin_fit6 <- tune_work_glm  %>%
-    finalize_workflow(parameters = tuned_best_glm)
-fit6 <- fin_fit6 %>%
-    fit(df_train)
-
-fit6 |> 
-  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
-  rename(Predição = .pred_class) |> 
-  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
-                         de Regressão logística')
-
-```
 
 
 # Análise Inferencial
@@ -603,7 +479,8 @@ A análise específica de resíduos também é importante para verificarmos visu
 residuals(fit1,type="deviance")|>
 Resid("Resíduos do Modelo 1", df)
 ```
-Com a Figura \@ref(fig:d4) verificamos que todos as ocorrências estão dentro dos limites: 
+Com a Figura \@ref(fig:d4) verificamos que todos as ocorrências estão dentro dos limites.  
+
 
 ### Envelope Simulado
 
@@ -621,12 +498,12 @@ Analisando a Figura \@ref(fig:d5), pode-se identificar que existem  alguns ponto
 
 ### Decisão
 
-Tendo em consideração toda a análise de influência e o objetivo da modelagem, decidimos por não remover nenhuma observação possivelmente influente, dado que o modelo está sendo usado para avaliar e prever condições raras na população (pokémons lendários) e essa condição leva a valores extremos das variáveis preditoras, pois estes pokémons possuem atributos maiores devidos a sua importância no universo fictício, desde proteger certas regiões, criar tempestades, gelo ou até mesmo o universo, devido a esses fatos eles possuem atributos de maior grau. Dado que, os possíveis pontos influentes em sua maioria são dados por pokémons lendários e com o decorrer do crescimento do universo pokémon se desejassemos predizer pokémons lendários com o modelo proposto nesse trabalho e os status parecidos com os dos pontos aberrantes, o modelo não estaria adequado para essa situação. No entanto, buscamos remover as observações discrepantes até que pudessemos chegar em condições melhores das análises de influência, que podem ser verificadas [\textcolor{blue}{aqui}](https://twitter.com/P0K3TR41N3R).
+Tendo em consideração toda a análise de influência e o objetivo da modelagem, decidimos por não remover nenhuma observação possivelmente influente, dado que o modelo está sendo usado para avaliar e prever condições raras na população (Pokémons lendários) e essa condição leva a valores extremos das variáveis preditoras, pois estes Pokémons possuem atributos maiores devidos a sua importância no universo fictício, desde proteger certas regiões, criar tempestades, gelo ou até mesmo o universo, devido a esses fatos eles possuem atributos de maior grau. Dado que, os possíveis pontos influentes em sua maioria são dados por Pokémons lendários e com o decorrer do crescimento do universo Pokémon se desejassemos predizer Pokémons lendários com o modelo proposto nesse trabalho e os status parecidos com os dos pontos aberrantes, o modelo não estaria adequado para essa situação. No entanto, buscamos remover as observações discrepantes até que pudessemos chegar em condições melhores das análises de influência, que podem ser verificadas [\textcolor{blue}{aqui}](https://twitter.com/P0K3TR41N3R).
 
 ## Testes
 
 Agora devemos prosseguir para a avaliação do modelo de Regressão Logística ajustado, começando com a análise de significância das variáveis dadas pelo seguinte teste de hipótese:
-$$H_0:\beta_i = 0\text{ (Covariável nula)}$$
+$$H_0:\beta_i = 0\text{ (Covariável não-significativa)}$$
 $$H_0:\beta_i \neq 0\text{ (Covariável significante)}$$
 O qual podemos analisar com a Tabela \@ref(tab:est).
 
@@ -637,13 +514,14 @@ fit1 = df_work %>%
 fit1 %>%
   extract_fit_parsnip() %>% 
   tidy() %>% 
+  mutate(p.value = format.pval(p.value, eps = 0.001)) |> 
   mypdf1::pdf1_tbl('Estatísticas do Modelo 1')
 
 estimate <- fit1 %>%
   extract_fit_parsnip() %>% 
   tidy() |> with(estimate)
 ```
-A Tabela \@ref(tab:est) detalha, algumas estatísticas muito importantes sobre as covariáveis, mas principalmente informa que todas as variáveis preditivas são significativo a 5% e tem um p-valor << 0.001.
+A Tabela \@ref(tab:est) detalha, algumas estatísticas muito importantes sobre as covariáveis, mas principalmente informa que todas as variáveis preditivas são significativas.
 
 ### Critério de seleção de modelos
 Existem vários procedimentos para a seleção de modelos, no entanto, nos utilizaremos principalmente de dois critérios AIC e BIC, que são processos de minimização que não envolvem testes, sendo a ideia básicia buscar um modelo que seja parcimonioso, ou seja, bem ajustado e com um número reduzido de parâmetros, a diferença entre os critérios são suas formas para penalização. Desse modo, a Tabela \@ref(tab:crit), tem vários critérios de seleção: 
@@ -653,20 +531,20 @@ glance(fit1) %>%
   mypdf1::pdf1_tbl('Critérios de Seleção do Modelo para a Regressão Logistica')
 ```
 
-Valendo-se da Tabela \@ref(tab:crit), temos que o critério de AIC,  `r glance(fit1)$AIC`, e BIC, `r glance(fit1)$BIC`, não contém valores elevados, para efeito de comparação se levarmos em conta os modelos com remoção de pontos influentes, o AIC do modelo proposto está bem próximo do modelo com poucas remoções e não está a uma diferença absurda do modelo com muitas remoções.
+Valendo-se da Tabela \@ref(tab:crit), temos que o critério de AIC,  `r glance(fit1)$AIC`, e BIC, `r glance(fit1)$BIC`, não contém valores elevados, para efeito de comparação se levarmos em conta os modelos com remoção de pontos influentes, o AIC do modelo proposto está bem próximo do modelo com poucas remoções e não está a uma diferença considerável do modelo com muitas remoções.
 
 
 ### Modelo Final e Inferências
 Nessa subseção iremos apresentar a estrutura do modelo, assim como a sua interpretação, avaliando a influencia das variáveis dependentes e verificando se converge com a realidade dos Pokémons lendários.
 
-Assim temos que a estrutura final do modelo ajustado, com y sendo a classificação como pokémon lendário, é:
+Assim temos que a estrutura final do modelo ajustado, com y sendo a classificação como Pokémon lendário, é:
 $$
 \begin{aligned}
 \log\left[ \frac { P( \operatorname{y} = \operatorname{1} ) }{ 1 - P( \operatorname{y} = \operatorname{1} ) } \right] &= \beta_0 + \beta_{1}(\operatorname{HP}) + \beta_{2}(\operatorname{Attack}) + \beta_{3}(\operatorname{Defense})\ + \\
 &\quad \beta_{4}(\operatorname{Sp.\ Atk}) + \beta_{5}(\operatorname{Sp.\ Def}) + \beta_{6}(\operatorname{Speed})
 \end{aligned}
 $$
-No entanto, podemos realizar algumas manipulações algébricas, para buscar a influência de cada cováriavel na chance dos pokémons serem preditos como lendários, começaremos com a aplicação do exponencial ($e$):
+No entanto, podemos realizar algumas manipulações algébricas, para buscar a influência de cada cováriavel na chance dos Pokémons serem preditos como lendários, começaremos com a aplicação do exponencial ($e$):
 $$
 \begin{aligned}
 \frac { P( \operatorname{y} = \operatorname{1} ) }{ 1 - P( \operatorname{y} = \operatorname{1} ) } &= e^{\beta_0 + \beta_{1}(\operatorname{HP}) + \beta_{2}(\operatorname{Attack}) + \beta_{3}(\operatorname{Defense})}\ * \\
