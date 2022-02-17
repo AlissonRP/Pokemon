@@ -44,17 +44,7 @@ graph<-function(data,l, df){
       geom_hline(yintercept=-l, linetype="dashed", color = "black")+
       labs(x="Índice") + labs(color='Lendário') 
 }
-fitdf<-function(fit) {
-  summary(fit) |>
-    (\(x) x$coefficients)() |>
-    data.frame() |>
-    round(3) |>
-    select(-`Pr...t..`,
-      "Estimativa" = "Estimate",
-      "Desvio padrão" = "Std..Error",
-      "Estatística t" = "t.value"
-    )
-}
+
 dffts<-function(fitn,lab1,df){
   n = length(fitn$fitted.values)
   dffits(fitn) %>% 
@@ -136,8 +126,10 @@ Nessa subseção vamos vislumbrar os atributos dos Pokémon constrastando  entre
 df_dec = df |> 
   mutate(Legendary = ifelse(Legendary == 1, 'Sim','Não'))  |>
   mutate(`Type 2` = fct_explicit_na(`Type 2`, "No Type 2"), `Type 2` = factor(`Type 2`, unique(`Type 2`)),  `Type 1` = factor(`Type 1`, unique(`Type 1`)))
+```
 
 
+```{r sum1}
 mean_leg = df_dec |> 
   group_by(Legendary) |> 
   summarise(across(where(is.numeric), mean),n = n()) 
@@ -422,6 +414,137 @@ oh_yeah |>
 ```
 Assim vemos pela tabela \@ref(tab:yeah) que o modelo que maximizou a sensibilidade é `r oh_yeah |> filter(sens == max(sens)) |> select(Modelo)`
 
+## Tunnando os modelos
+
+
+```{r}
+df_boost <- boost_tree(trees = 1000,
+                        tree_depth = tune(),
+                        min_n = tune(),
+                        learn_rate = tune(),
+                        sample_size = tune(),
+                        mtry = tune(),
+                        loss_reduction = tune()
+                       ) |>
+  set_engine('xgboost') |> 
+  set_mode("classification")
+
+df_boost_glm <- logistic_reg(penalty = tune(), mixture = 1) %>% 
+  set_engine("glmnet")
+
+df_boost_rf = rand_forest(mode = 'classification', 
+                          trees = 1000,
+                          mtry = tune(),
+                          min_n = tune()) |> 
+  set_engine('ranger', importance = "impurity")
+
+xgb_grid <- grid_latin_hypercube(
+  tree_depth(),
+  min_n(),
+  loss_reduction(),
+  sample_size = sample_prop(),
+  finalize(mtry(), df_train),
+  learn_rate(),
+  size = 30
+)
+```
+
+
+```{r}
+#XGBoost
+tune_work <- workflow() %>%
+    add_model(df_boost) %>%
+    add_recipe(df_rec1)
+tune_results <- tune_grid(
+    object     = tune_work,
+    resamples  = df_vf,
+    param_info = parameters(tune_work),
+    grid       = xgb_grid,#15
+    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
+    control    = control_grid(save_pred = TRUE)
+)
+
+#RF
+
+tune_work_rf <- workflow() %>%
+    add_model(df_boost_rf) %>%
+    add_recipe(df_rec1)
+tune_results_rf <- tune_grid(
+    object     = tune_work_rf,
+    resamples  = df_vf,
+    param_info = parameters(tune_work_rf),
+    grid       = 15, 
+    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
+    control    = control_grid(save_pred = TRUE)
+)
+
+#GLM
+
+tune_work_glm <- workflow() %>%
+    add_model(df_boost_glm) %>%
+    add_recipe(df_rec1)
+tune_results_glm <- tune_grid(
+    object     = tune_work_glm,
+    resamples  = df_vf,
+    param_info = parameters(tune_work_glm),
+    grid       = 15, 
+    metrics    = yardstick::metric_set(roc_auc, spec, sens), 
+    control    = control_grid(save_pred = TRUE)
+)
+
+collect_metrics(tune_results)
+show_best(tune_results, metric = "spec") #[3,]
+```
+
+
+```{r}
+tuned_best <- select_best(tune_results, metric = "spec") #[3,]
+fin_wflw <- tune_work  %>%
+    finalize_workflow(parameters = tuned_best)
+
+wflw_fit <- fin_wflw %>%
+    fit(df_train)
+
+
+
+wflw_fit |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+```
+
+
+```{r}
+tuned_best_rf <- select_best(tune_results_rf, metric = "spec") 
+fin_wflw_rf <- tune_work_rf  %>%
+    finalize_workflow(parameters = tuned_best_rf)
+wflw_fit_rf <- fin_wflw_rf %>%
+    fit(df_train)
+
+wflw_fit_rf |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+
+```
+
+
+```{r}
+tuned_best_glm <- select_best(tune_results_glm, metric = "roc_auc") 
+fin_wflw_glm <- tune_work_glm  %>%
+    finalize_workflow(parameters = tuned_best_glm)
+wflw_fit_glm <- fin_wflw_glm %>%
+    fit(df_train)
+
+wflw_fit_glm |> 
+  predict(new_data = df_test) |> bind_cols(df_test |> select(Legendary)) |>
+  rename(Predição = .pred_class) |> 
+  mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
+                         de Regressão logística')
+
+```
 
 
 # Análise Inferencial
@@ -447,12 +570,12 @@ Nessa seção veremos as medidas de alavancagem, que informam se uma observaçã
 alavanca(fit1,df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
 
-Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 (`r nome[262,1]`), devido ao fato que este Pokémon é o que mais achata a Figura, mas também temos outras observações acima do limite da medida de alavancagem estipulado.
+Com a Figura \@ref(fig:d1), tem-se que a observação que possui a maior alavancagem é o ponto 262 (o Pokémon`r nome[262,1]`), devido ao fato que este Pokémon é o que mais achata a Figura, mas também temos outras observações acima do limite da medida de alavancagem estipulado.
 
 
 
 ### Distância de Cook
-Outra medida interessante para ponto aberrantes é a Distância de Cook ($D_i$), que mede essencialmente a influência das observações sobre os parâmetros e o ajuste, avaliando a influência de o que pequenas pertubarções nas variâncias das observações causam nas estimativas dos parâmetros. Ou de forma simplificada, temos a influência da observação $i$ sobre todos os $n$ valores ajustados, 
+Outra medida interessante para ponto aberrantes é a Distância de Cook, que mede essencialmente a influência das observações sobre os parâmetros e o ajuste, avaliando a influência de o que pequenas pertubarções nas variâncias das observações causam nas estimativas dos parâmetros. Ou de forma simplificada, temos a influência da observação $i$ sobre todos os $n$ valores ajustados, 
 
 ```{r d2, fig.cap="Distância de Cook para o Modelo 1"}
 cook(fit1, "Distância do Modelo 1", df) + ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
@@ -463,13 +586,13 @@ Com a Figura \@ref(fig:d2), tem-se que as observações que possuem maior valore
 
 ### DFFITS
 
-A medida DFFITS ($DFFITS_i$) pode ser considerada uma medida complementar ou concorrente a distância de Cook, tendo o próposito de medir a influência das observações nos parâmetros de posição e escala (mas não simultaneamente), assim informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, tem-se que:
+A medida DFFITS pode ser considerada uma medida complementar ou concorrente a distância de Cook, tendo o próposito de medir a influência das observações nos parâmetros de posição e escala (mas não simultaneamente), assim informam o grau de influência que a observação $i$ tem sobre o valor seu próprio valor ajustado $\hat{y_i}$, tem-se que:
 
 
 ```{r d3, fig.cap="DFFITS do Modelo 1"}
 dffts(fit1, "DFFITS do Modelo 1", df)+ ggrepel::geom_text_repel(aes(label=1:nrow(df)), size=2.8, point.padding = 0.3)
 ```
-Com a Figura \@ref(fig:d3) percebe-se que as observações que podem ser consideradas pontos influentes de acordo com o DFFITS são: 262, 415, 416, 429 e 430, `r paste(nome[c(262,415,416,429,430),1],  sep=' ')`, respectivamente), visto que são os indíviduos que mais distorcem a Figura \@ref(fig:d3).
+Com a Figura \@ref(fig:d3) percebe-se que as observações que podem ser consideradas pontos influentes de acordo com o DFFITS são: 262, 415, 416, 429 e 430, (sendo os Pokémons conhecidos como: `r paste(nome[c(262,415,416,429,430),1],  sep=' ')`), visto que são os indíviduos que mais distorcem a Figura \@ref(fig:d3).
 
 ### Resíduos
 
@@ -500,9 +623,68 @@ Analisando a Figura \@ref(fig:d5), pode-se identificar que existem  alguns ponto
 
 Tendo em consideração toda a análise de influência e o objetivo da modelagem, decidimos por não remover nenhuma observação possivelmente influente, dado que o modelo está sendo usado para avaliar e prever condições raras na população (pokémons lendários) e essa condição leva a valores extremos das variáveis preditoras, pois estes pokémons possuem atributos maiores devidos a sua importância no universo fictício, desde proteger certas regiões, criar tempestades, gelo ou até mesmo o universo, devido a esses fatos eles possuem atributos de maior grau. Dado que, os possíveis pontos influentes em sua maioria são dados por pokémons lendários e com o decorrer do crescimento do universo pokémon se desejassemos predizer pokémons lendários com o modelo proposto nesse trabalho e os status parecidos com os dos pontos aberrantes, o modelo não estaria adequado para essa situação. No entanto, buscamos remover as observações discrepantes até que pudessemos chegar em condições melhores das análises de influência, que podem ser verificadas [\textcolor{blue}{aqui}](https://twitter.com/P0K3TR41N3R).
 
-Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
+## Testes
+
+Agora devemos prosseguir para a avaliação do modelo de Regressão Logística ajustado, começando com a análise de significância das variáveis dadas pelo seguinte teste de hipótese:
+$$H_0:\beta_i = 0\text{ (Covariável nula)}$$
+$$H_0:\beta_i \neq 0\text{ (Covariável significante)}$$
+O qual podemos analisar com a Tabela \@ref(tab:est).
+
+```{r est}
+fit1 = df_work %>% 
+  extract_workflow("si_logistic") %>% 
+  fit(data = df)
+fit1 %>%
+  extract_fit_parsnip() %>% 
+  tidy() %>% 
+  mypdf1::pdf1_tbl('Estatísticas do Modelo 1')
+
+estimate <- fit1 %>%
+  extract_fit_parsnip() %>% 
+  tidy() |> with(estimate)
+```
+A Tabela \@ref(tab:est) detalha, algumas estatísticas muito importantes sobre as covariáveis, mas principalmente informa que todas as variáveis preditivas são significativo a 5% e tem um p-valor << 0.001.
+
+### Critério de seleção de modelos
+Existem vários procedimentos para a seleção de modelos, no entanto, nos utilizaremos principalmente de dois critérios AIC e BIC, que são processos de minimização que não envolvem testes, sendo a ideia básicia buscar um modelo que seja parcimonioso, ou seja, bem ajustado e com um número reduzido de parâmetros, a diferença entre os critérios são suas formas para penalização. Desse modo, a Tabela \@ref(tab:crit), tem vários critérios de seleção: 
+
+```{r crit}
+glance(fit1) %>%
+  mypdf1::pdf1_tbl('Critérios de Seleção do Modelo para a Regressão Logistica')
+```
+
+Valendo-se da Tabela \@ref(tab:crit), temos que o critério de AIC,  `r glance(fit1)$AIC`, e BIC, `r glance(fit1)$BIC`, não contém valores elevados, para efeito de comparação se levarmos em conta os modelos com remoção de pontos influentes, o AIC do modelo proposto está bem próximo do modelo com poucas remoções e não está a uma diferença absurda do modelo com muitas remoções.
 
 
+### Modelo Final e Inferências
+Nessa subseção iremos apresentar a estrutura do modelo, assim como a sua interpretação, avaliando a influencia das variáveis dependentes e verificando se converge com a realidade dos Pokémons lendários.
+
+Assim temos que a estrutura final do modelo ajustado, com y sendo a classificação como pokémon lendário, é:
+$$
+\begin{aligned}
+\log\left[ \frac { P( \operatorname{y} = \operatorname{1} ) }{ 1 - P( \operatorname{y} = \operatorname{1} ) } \right] &= \beta_0 + \beta_{1}(\operatorname{HP}) + \beta_{2}(\operatorname{Attack}) + \beta_{3}(\operatorname{Defense})\ + \\
+&\quad \beta_{4}(\operatorname{Sp.\ Atk}) + \beta_{5}(\operatorname{Sp.\ Def}) + \beta_{6}(\operatorname{Speed})
+\end{aligned}
+$$
+No entanto, podemos realizar algumas manipulações algébricas, para buscar a influência de cada cováriavel na chance dos pokémons serem preditos como lendários, começaremos com a aplicação do exponencial ($e$):
+$$
+\begin{aligned}
+\frac { P( \operatorname{y} = \operatorname{1} ) }{ 1 - P( \operatorname{y} = \operatorname{1} ) } &= e^{\beta_0 + \beta_{1}(\operatorname{HP}) + \beta_{2}(\operatorname{Attack}) + \beta_{3}(\operatorname{Defense})}\ * \\
+&\quad e^{\beta_{4}(\operatorname{Sp.\ Atk}) + \beta_{5}(\operatorname{Sp.\ Def}) + \beta_{6}(\operatorname{Speed})}
+\end{aligned}
+$$
+
+Com isso, já conseguimos verificar a influência de cada variável na chance de ser lendário, considerando todos os outros atributos constantes:
+
+  -    **HP:** A adição de 1 de HP, acresce em `r exp(estimate[2])`, a chance de um Pokémon ser categorizado como lendário;
+  -    **Attack:** O acréscimo de uma unidade de Attack, aumenta em `r exp(estimate[3])`, a chance de um Pokémon ser predito como lendário;
+  -    **Defense:** A soma de 1 de Defense, acrescenta em `r exp(estimate[4])`, a chance de um Pokémon ser definido como lendário;
+  -    **Sp. Attack:** A inclusão de 1 de Sp. Attack, amplifica em `r exp(estimate[5])`, a chance de um Pokémon ser delineado como lendário;
+  -    **Sp. Defense:** O aumento de 1 de Sp. Defense, adiciona em `r exp(estimate[6])`, a chance de um Pokémon ser categorizado como lendário;
+  -    **Speed:** A amplicação de 1 de Speed, incorpora em `r exp(estimate[7])`, a chance de um Pokémon ser predito como lendário;
+
+
+Consoante com as Tabelas \@ref(tab:summary) e \@ref(tab:sum1), percebemos que a influência dos preditores tem fundamento concreto, em virtude das similaridades das médias e medianas dos atributos, ficando em níveis semelhantes e assim como na Tabela \@ref(tab:sum1), o atributo que se destaca é principalmente o Attack e tem-se uma similaridade com a influência das covariáveis no modelo de Random Forest, dado pela Figura \@ref(fig:vip), onde o status de Sp. Attack é que se sobresãe. 
 # Referências {-}
 
 
