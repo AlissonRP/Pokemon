@@ -359,7 +359,7 @@ xg_cm |>
   mypdf1::pdf1_tbl_freq2(Legendary , Predição, 'Matriz de confusão para os dados de teste no modelo 
                          de XgBoost')
 ```
-Ao contrário dos modelos anteriores que tiveram 9 predições para lendário, Xgboost teve 10, porém foram um total de 12 predições para lendário.
+Ao contrário dos modelos anteriores que tiveram 9 predições corretas para lendário,  o XGBoost teve 10.
 
 Da matriz de confusão podemos derivar as seguintes métricas:  
 
