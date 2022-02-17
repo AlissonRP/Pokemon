@@ -498,6 +498,8 @@ Analisando a Figura \@ref(fig:d5), pode-se identificar que existem pontos fora d
 
 ### Decisão
 
+Tendo em consideração toda a análise de influência e o objetivo da modelagem, decidimos por não remover nenhuma observação possivelmente influente, dado que o modelo está sendo usado para avaliar e prever condições raras na população (pokémons lendários) e essa condição leva a valores extremos das variáveis preditoras, pois estes pokémons possuem atributos maiores devidos a sua importância no universo fictício, desde proteger certas regiões, criar tempestades, gelo ou até mesmo o universo, devido a esses fatos eles possuem atributos de maior grau. Dado que, os possíveis pontos influentes em sua maioria são dados por pokémons lendários e com o decorrer do crescimento do universo pokémon se desejassemos predizer pokémons lendários com o modelo proposto nesse trabalho e os status parecidos com os dos pontos aberrantes, o modelo não estaria adequado para essa situação. No entanto, buscamos remover as observações discrepantes até que pudessemos chegar em condições melhores das análises de influência, que podem ser verificadas [\textcolor{blue}{aqui}](https://twitter.com/P0K3TR41N3R).
+
 Você faz referência cruzada de figuras assim: Figura \@ref(fig:crfgraph)
 
 
